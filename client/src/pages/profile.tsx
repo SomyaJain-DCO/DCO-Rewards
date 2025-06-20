@@ -232,6 +232,7 @@ export default function Profile() {
                   key={activity.id}
                   activity={activity}
                   showApprover={true}
+                  hideUserName={true}
                 />
               ))}
             </div>

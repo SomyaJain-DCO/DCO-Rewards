@@ -135,6 +135,7 @@ Changelog:
 - June 20, 2025. Fixed header positioning to prevent sidebar from hiding dashboard title text
 - June 20, 2025. Enhanced activity cards to display full descriptions and activity dates when viewing user activities
 - June 20, 2025. Implemented concise activity list format for user activities page matching My Activities layout
+- June 20, 2025. Removed redundant user names from My Activities and Profile pages while keeping them for other users' activities
 ```
 
 ## User Preferences

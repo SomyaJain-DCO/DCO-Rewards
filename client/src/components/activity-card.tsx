@@ -36,9 +36,10 @@ interface ActivityCardProps {
   };
   showApprover?: boolean;
   userRole?: string;
+  hideUserName?: boolean;
 }
 
-export default function ActivityCard({ activity, showApprover = false, userRole }: ActivityCardProps) {
+export default function ActivityCard({ activity, showApprover = false, userRole, hideUserName = false }: ActivityCardProps) {
   const getInitials = (firstName?: string, lastName?: string, email?: string) => {
     if (!firstName && !lastName) return email?.charAt(0).toUpperCase() || "U";
     return `${firstName?.charAt(0) || ""}${lastName?.charAt(0) || ""}`.toUpperCase();
@@ -102,8 +103,12 @@ export default function ActivityCard({ activity, showApprover = false, userRole 
           <div className="flex-1 min-w-0">
             <p className="font-medium text-gray-800 mb-1">{activity.title}</p>
             <div className="flex items-center space-x-3 text-sm text-gray-600 mb-2">
-              <span>by {getDisplayName(activity.user)}</span>
-              <span>•</span>
+              {!hideUserName && (
+                <>
+                  <span>by {getDisplayName(activity.user)}</span>
+                  <span>•</span>
+                </>
+              )}
               <div className="flex items-center gap-1">
                 <Calendar className="h-3 w-3" />
                 <span>{format(new Date(activity.activityDate), "MMM dd, yyyy")}</span>
