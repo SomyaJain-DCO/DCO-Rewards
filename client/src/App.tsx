@@ -17,11 +17,12 @@ import AllActivities from "@/pages/all-activities";
 import Encashment from "@/pages/encashment";
 import Encashments from "@/pages/encashments";
 import Admin from "@/pages/admin";
+import CompleteProfile from "@/pages/complete-profile";
 import Sidebar from "@/components/sidebar";
 import Header from "@/components/header";
 
 function Router() {
-  const { isAuthenticated, isLoading } = useAuth();
+  const { isAuthenticated, isLoading, user } = useAuth();
 
   if (isLoading) {
     return (
@@ -38,6 +39,13 @@ function Router() {
         <Route component={NotFound} />
       </Switch>
     );
+  }
+
+  // Check if profile is incomplete (missing firstName, lastName, or designation)
+  const isProfileIncomplete = user && (!user.firstName || !user.lastName || !user.designation);
+
+  if (isProfileIncomplete) {
+    return <CompleteProfile />;
   }
 
   return (

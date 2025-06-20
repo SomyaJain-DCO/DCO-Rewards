@@ -63,6 +63,44 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Complete profile after login
+  app.put('/api/profile/complete', isAuthenticated, async (req: any, res: any) => {
+    try {
+      const userId = req.user?.claims.sub;
+      if (!userId) return res.status(401).json({ message: "Unauthorized" });
+
+      const { firstName, lastName, designation, role } = req.body;
+
+      if (typeof firstName !== 'string' || !firstName.trim()) {
+        return res.status(400).json({ message: "First name is required" });
+      }
+
+      if (typeof lastName !== 'string' || !lastName.trim()) {
+        return res.status(400).json({ message: "Last name is required" });
+      }
+
+      if (typeof designation !== 'string') {
+        return res.status(400).json({ message: "Designation is required" });
+      }
+
+      if (typeof role !== 'string' || !['contributor', 'approver'].includes(role)) {
+        return res.status(400).json({ message: "Role must be either 'contributor' or 'approver'" });
+      }
+
+      const updatedUser = await storage.updateUserProfile(userId, {
+        firstName: firstName.trim(),
+        lastName: lastName.trim(),
+        designation: designation.trim(),
+        role
+      });
+      
+      res.json(updatedUser);
+    } catch (error) {
+      console.error("Error completing profile:", error);
+      res.status(500).json({ message: "Failed to complete profile" });
+    }
+  });
+
   // Activity categories
   app.get('/api/activity-categories', isAuthenticated, async (req: any, res: any) => {
     try {
