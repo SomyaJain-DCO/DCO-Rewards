@@ -10,6 +10,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import ActivityCard from "@/components/activity-card";
 import { User, Calendar, Trophy, DollarSign, Search, X, Edit, Save, XCircle } from "lucide-react";
 import { apiRequest } from "@/lib/queryClient";
@@ -31,10 +32,107 @@ export default function Profile() {
   const [editFirstName, setEditFirstName] = useState("");
   const [editLastName, setEditLastName] = useState("");
   const [editDesignation, setEditDesignation] = useState("");
+  const [profileImage, setProfileImage] = useState<File | null>(null);
+  const [profileImagePreview, setProfileImagePreview] = useState<string | null>(null);
 
 
 
 
+
+  // Handle profile image upload
+  const handleImageChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (file) {
+      if (file.size > 5 * 1024 * 1024) { // 5MB limit
+        toast({
+          title: "Error",
+          description: "Image size should be less than 5MB",
+          variant: "destructive",
+        });
+        return;
+      }
+      
+      if (!file.type.startsWith('image/')) {
+        toast({
+          title: "Error",
+          description: "Please select a valid image file",
+          variant: "destructive",
+        });
+        return;
+      }
+      
+      setProfileImage(file);
+      
+      // Create preview URL
+      const reader = new FileReader();
+      reader.onload = (e) => {
+        setProfileImagePreview(e.target?.result as string);
+      };
+      reader.readAsDataURL(file);
+    }
+  };
+
+  // Profile update mutation
+  const updateProfileMutation = useMutation({
+    mutationFn: async (formData: FormData) => {
+      const response = await fetch("/api/profile/update", {
+        method: "PUT",
+        body: formData,
+      });
+      
+      if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(errorData.message || "Failed to update profile");
+      }
+      
+      return await response.json();
+    },
+    onSuccess: () => {
+      toast({
+        title: "Request Submitted",
+        description: "Your profile update request has been submitted for approval by Senior Manager or Partner.",
+      });
+      setIsEditDialogOpen(false);
+      // Reset form state
+      setEditFirstName("");
+      setEditLastName("");
+      setEditDesignation("");
+      setProfileImage(null);
+      setProfileImagePreview(null);
+      queryClient.invalidateQueries({ queryKey: ["/api/auth/user"] });
+    },
+    onError: (error) => {
+      if (isUnauthorizedError(error)) {
+        toast({
+          title: "Unauthorized",
+          description: "You are logged out. Logging in again...",
+          variant: "destructive",
+        });
+        setTimeout(() => {
+          window.location.href = "/api/login";
+        }, 500);
+        return;
+      }
+      toast({
+        title: "Error",
+        description: error.message || "Failed to submit profile update request",
+        variant: "destructive",
+      });
+    },
+  });
+
+  const handleProfileSubmit = () => {
+    const formData = new FormData();
+    formData.append("firstName", editFirstName.trim());
+    formData.append("lastName", editLastName.trim());
+    formData.append("designation", editDesignation);
+    
+    if (profileImage) {
+      formData.append("profileImage", profileImage);
+    }
+    
+    updateProfileMutation.mutate(formData);
+  };
 
   const { data: stats, isLoading: statsLoading } = useQuery({
     queryKey: ["/api/stats"],
@@ -189,11 +287,15 @@ export default function Profile() {
           <CardContent>
             <div className="text-center space-y-4">
               {/* Avatar */}
-              <div className="w-20 h-20 bg-primary rounded-full flex items-center justify-center mx-auto">
-                <span className="text-white text-2xl font-bold">
+              <Avatar className="w-20 h-20 mx-auto">
+                <AvatarImage 
+                  src={(user as any)?.profileImageUrl} 
+                  alt={`${(user as any)?.firstName || 'User'}'s profile`}
+                />
+                <AvatarFallback className="bg-primary text-white text-2xl font-bold">
                   {(user as any)?.email ? (user as any).email.charAt(0).toUpperCase() : 'U'}
-                </span>
-              </div>
+                </AvatarFallback>
+              </Avatar>
 
               {/* Name and Email */}
               <div>
@@ -312,19 +414,42 @@ export default function Profile() {
                     </SelectContent>
                   </Select>
                 </div>
+                
+                {/* Profile Picture Upload */}
+                <div className="grid grid-cols-4 items-center gap-4">
+                  <Label htmlFor="profileImage" className="text-right">
+                    Profile Picture
+                  </Label>
+                  <div className="col-span-3 space-y-3">
+                    <Input
+                      id="profileImage"
+                      type="file"
+                      accept="image/*"
+                      onChange={handleImageChange}
+                      className="cursor-pointer"
+                    />
+                    {profileImagePreview && (
+                      <div className="flex items-center gap-3">
+                        <Avatar className="w-12 h-12">
+                          <AvatarImage src={profileImagePreview} alt="Preview" />
+                          <AvatarFallback>Preview</AvatarFallback>
+                        </Avatar>
+                        <div className="text-sm text-gray-600">
+                          <p>Image preview</p>
+                          <p className="text-xs">Max size: 5MB</p>
+                        </div>
+                      </div>
+                    )}
+                  </div>
+                </div>
               </div>
               <DialogFooter>
                 <Button
                   type="submit"
-                  onClick={() => {
-                    toast({
-                      title: "Request Submitted",
-                      description: "Your profile update request has been submitted for approval by Senior Manager or Partner.",
-                    });
-                    setIsEditDialogOpen(false);
-                  }}
+                  onClick={handleProfileSubmit}
+                  disabled={updateProfileMutation.isPending}
                 >
-                  Submit for Approval
+                  {updateProfileMutation.isPending ? "Submitting..." : "Submit for Approval"}
                 </Button>
               </DialogFooter>
             </DialogContent>

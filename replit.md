@@ -166,6 +166,7 @@ Changelog:
 - June 20, 2025. Added comprehensive admin panel with sample data cleanup functionality to remove automatically generated users like Amit Kumar and Vikram Gupta, including their activities and data
 - June 20, 2025. Enhanced My Profile page with editable designation dropdown featuring 15+ CA firm roles (Junior Associate to Partner) and added Profile Type display showing Contributor/Approver status with role-based descriptions
 - June 20, 2025. Updated designation dropdown to 6 specific CA firm roles with automatic role assignment: Partner → Approver, Senior Manager/Manager/Associate/Senior Consultant/Analyst → Contributor, and fixed API request parameter order bug
+- June 20, 2025. Added comprehensive profile picture upload functionality to My Profile section with image preview, 5MB file size limit, automatic file cleanup, and secure file storage in uploads/profiles directory
 ```
 
 ## User Preferences

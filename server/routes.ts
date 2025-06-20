@@ -1,10 +1,47 @@
 import type { Express, Request, Response } from "express";
+import express from "express";
 import { createServer, type Server } from "http";
 import { storage } from "./storage";
 import { setupAuth, isAuthenticated } from "./replitAuth";
 import { insertActivitySchema, approveActivitySchema, insertEncashmentRequestSchema, approveEncashmentRequestSchema, users, activities, encashmentRequests } from "@shared/schema";
 import { db } from "./db";
 import { eq } from "drizzle-orm";
+import multer from "multer";
+import path from "path";
+import fs from "fs/promises";
+
+// Configure multer for profile picture uploads
+const storage_config = multer.diskStorage({
+  destination: async (req, file, cb) => {
+    const uploadPath = path.join(process.cwd(), 'uploads', 'profiles');
+    try {
+      await fs.mkdir(uploadPath, { recursive: true });
+      cb(null, uploadPath);
+    } catch (error) {
+      cb(error as Error, uploadPath);
+    }
+  },
+  filename: (req, file, cb) => {
+    const userId = (req as AuthenticatedRequest).user?.claims.sub;
+    const fileExtension = path.extname(file.originalname);
+    const filename = `profile-${userId}-${Date.now()}${fileExtension}`;
+    cb(null, filename);
+  }
+});
+
+const upload = multer({
+  storage: storage_config,
+  limits: {
+    fileSize: 5 * 1024 * 1024, // 5MB limit
+  },
+  fileFilter: (req, file, cb) => {
+    if (file.mimetype.startsWith('image/')) {
+      cb(null, true);
+    } else {
+      cb(new Error('Only image files are allowed'));
+    }
+  }
+});
 
 interface AuthenticatedRequest extends Request {
   user?: {
@@ -21,6 +58,10 @@ interface AuthenticatedRequest extends Request {
 export async function registerRoutes(app: Express): Promise<Server> {
   // Auth middleware
   await setupAuth(app);
+
+  // Serve uploaded files statically
+  const staticPath = path.join(process.cwd(), 'uploads');
+  app.use('/uploads', express.static(staticPath));
 
   // Seed activity categories on startup
   await storage.seedActivityCategories();
@@ -60,6 +101,82 @@ export async function registerRoutes(app: Express): Promise<Server> {
     } catch (error) {
       console.error("Error updating designation and role:", error);
       res.status(500).json({ message: "Failed to update designation and role" });
+    }
+  });
+
+  // Profile update with image upload
+  app.put('/api/profile/update', isAuthenticated, upload.single('profileImage'), async (req: any, res: any) => {
+    try {
+      const userId = req.user?.claims.sub;
+      if (!userId) return res.status(401).json({ message: "Unauthorized" });
+
+      const { firstName, lastName, designation } = req.body;
+      
+      // Validate required fields
+      if (!firstName?.trim() || !lastName?.trim() || !designation?.trim()) {
+        return res.status(400).json({ message: "First name, last name, and designation are required" });
+      }
+
+      // Validate designation
+      const validDesignations = ['Partner', 'Senior Manager', 'Manager', 'Associate', 'Senior Consultant', 'Analyst'];
+      if (!validDesignations.includes(designation.trim())) {
+        return res.status(400).json({ message: "Invalid designation" });
+      }
+
+      let profileImageUrl = null;
+
+      // Handle profile image upload
+      if (req.file) {
+        // Create relative URL for the uploaded file
+        profileImageUrl = `/uploads/profiles/${req.file.filename}`;
+        
+        // Clean up old profile image if exists
+        const currentUser = await storage.getUser(userId);
+        if (currentUser?.profileImageUrl && currentUser.profileImageUrl.startsWith('/uploads/')) {
+          const oldImagePath = path.join(process.cwd(), currentUser.profileImageUrl);
+          try {
+            await fs.unlink(oldImagePath);
+          } catch (error) {
+            console.log("Could not delete old profile image:", error);
+          }
+        }
+      }
+
+      // Update user profile
+      const updateData: any = {
+        firstName: firstName.trim(),
+        lastName: lastName.trim(),
+        designation: designation.trim(),
+        updatedAt: new Date(),
+      };
+
+      if (profileImageUrl) {
+        updateData.profileImageUrl = profileImageUrl;
+      }
+
+      const [updatedUser] = await db
+        .update(users)
+        .set(updateData)
+        .where(eq(users.id, userId))
+        .returning();
+
+      res.json({ 
+        message: "Profile update request submitted successfully",
+        user: updatedUser 
+      });
+    } catch (error) {
+      console.error("Error updating profile:", error);
+      
+      // Clean up uploaded file if there was an error
+      if (req.file) {
+        try {
+          await fs.unlink(req.file.path);
+        } catch (unlinkError) {
+          console.error("Error cleaning up uploaded file:", unlinkError);
+        }
+      }
+      
+      res.status(500).json({ message: "Failed to update profile" });
     }
   });
 
