@@ -17,8 +17,8 @@ export default function MyActivities() {
   
   // Search and filter state
   const [searchTerm, setSearchTerm] = useState("");
-  const [yearFilter, setYearFilter] = useState("");
-  const [categoryFilter, setCategoryFilter] = useState("");
+  const [yearFilter, setYearFilter] = useState("all");
+  const [categoryFilter, setCategoryFilter] = useState("all");
   
   // Get filter from URL search params
   const searchParams = new URLSearchParams(window.location.search);
@@ -69,13 +69,13 @@ export default function MyActivities() {
       }
 
       // Year filter
-      if (yearFilter) {
+      if (yearFilter && yearFilter !== "all") {
         const activityYear = new Date(activity.activityDate).getFullYear().toString();
         if (activityYear !== yearFilter) return false;
       }
 
       // Category filter
-      if (categoryFilter && activity.category.name !== categoryFilter) return false;
+      if (categoryFilter && categoryFilter !== "all" && activity.category.name !== categoryFilter) return false;
 
       return true;
     });
@@ -115,8 +115,8 @@ export default function MyActivities() {
 
   const clearFilters = () => {
     setSearchTerm("");
-    setYearFilter("");
-    setCategoryFilter("");
+    setYearFilter("all");
+    setCategoryFilter("all");
   };
 
   return (
@@ -152,7 +152,7 @@ export default function MyActivities() {
                   <SelectValue placeholder="Filter by year" />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="">All years</SelectItem>
+                  <SelectItem value="all">All years</SelectItem>
                   {availableYears.map((year) => (
                     <SelectItem key={year} value={year}>
                       {year}
@@ -167,7 +167,7 @@ export default function MyActivities() {
                   <SelectValue placeholder="Filter by category" />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="">All categories</SelectItem>
+                  <SelectItem value="all">All categories</SelectItem>
                   {availableCategories.map((category) => (
                     <SelectItem key={category} value={category}>
                       {category}
@@ -177,7 +177,7 @@ export default function MyActivities() {
               </Select>
               
               {/* Clear Filters Button */}
-              {(searchTerm || yearFilter || categoryFilter) && (
+              {(searchTerm || (yearFilter && yearFilter !== "all") || (categoryFilter && categoryFilter !== "all")) && (
                 <button
                   onClick={clearFilters}
                   className="flex items-center gap-2 px-3 py-2 text-sm text-gray-600 hover:text-gray-800 border border-gray-300 rounded-md hover:bg-gray-50"
@@ -197,7 +197,7 @@ export default function MyActivities() {
             <FileText className="h-12 w-12 text-gray-400 mb-4" />
             <h3 className="text-lg font-medium text-gray-900 mb-2">No activities found</h3>
             <p className="text-gray-500 text-center">
-              {searchTerm || yearFilter || categoryFilter
+              {searchTerm || (yearFilter && yearFilter !== "all") || (categoryFilter && categoryFilter !== "all")
                 ? "No activities match your search criteria. Try adjusting your filters."
                 : filter === "pending" 
                 ? "You don't have any pending activities."
@@ -206,7 +206,7 @@ export default function MyActivities() {
                 : "You haven't submitted any activities yet."
               }
             </p>
-            {(searchTerm || yearFilter || categoryFilter) && (
+            {(searchTerm || (yearFilter && yearFilter !== "all") || (categoryFilter && categoryFilter !== "all")) && (
               <button
                 onClick={clearFilters}
                 className="mt-3 text-sm text-blue-600 hover:text-blue-800"
