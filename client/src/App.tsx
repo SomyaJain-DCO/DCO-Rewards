@@ -1,9 +1,11 @@
+import { useState, useEffect } from "react";
 import { Switch, Route } from "wouter";
 import { queryClient } from "./lib/queryClient";
 import { QueryClientProvider } from "@tanstack/react-query";
 import { Toaster } from "@/components/ui/toaster";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { useAuth } from "@/hooks/useAuth";
+import OnboardingDialog from "@/components/onboarding-dialog";
 import NotFound from "@/pages/not-found";
 import Landing from "@/pages/landing";
 import Dashboard from "@/pages/dashboard";
@@ -21,7 +23,22 @@ import Sidebar from "@/components/sidebar";
 import Header from "@/components/header";
 
 function Router() {
-  const { isAuthenticated, isLoading } = useAuth();
+  const { isAuthenticated, isLoading, user } = useAuth();
+  const [showOnboarding, setShowOnboarding] = useState(false);
+
+  // Check if user needs onboarding (first-time login without name/designation)
+  const needsOnboarding = isAuthenticated && user && (!user.firstName || !user.lastName || !user.designation);
+
+  // Show onboarding dialog when user needs it
+  useEffect(() => {
+    if (needsOnboarding) {
+      setShowOnboarding(true);
+    }
+  }, [needsOnboarding]);
+
+  const handleOnboardingComplete = () => {
+    setShowOnboarding(false);
+  };
 
   if (isLoading) {
     return (
@@ -62,6 +79,12 @@ function Router() {
           </Switch>
         </div>
       </main>
+      
+      {/* Onboarding Dialog for first-time users */}
+      <OnboardingDialog 
+        isOpen={showOnboarding} 
+        onComplete={handleOnboardingComplete} 
+      />
     </div>
   );
 }

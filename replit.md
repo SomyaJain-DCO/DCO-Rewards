@@ -171,6 +171,7 @@ Changelog:
 - June 20, 2025. Added delete functionality to My Activities tab allowing users to remove pending activities only, with confirmation dialog and complete backend validation to ensure only pending activities can be deleted
 - June 20, 2025. Fixed profile update system to create approval requests instead of direct changes - implemented profile_change_requests table with proper approval workflow requiring Senior Manager or Partner authorization before applying changes
 - June 20, 2025. Implemented comprehensive profile change approval system appearing in pending approvals for both Senior Manager/Partner approvers and users who submitted requests, with complete backend API endpoints and frontend display integration
+- June 20, 2025. Added first-time login onboarding flow prompting new users to enter name and designation when logging in without profile information, with direct profile setup bypassing approval workflow for initial registration
 ```
 
 ## User Preferences

@@ -104,6 +104,53 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Profile setup for first-time login
+  app.put('/api/profile/setup', isAuthenticated, async (req: any, res: any) => {
+    try {
+      const userId = req.user?.claims.sub;
+      if (!userId) return res.status(401).json({ message: "Unauthorized" });
+
+      const { firstName, lastName, designation } = req.body;
+      
+      // Validate required fields
+      if (!firstName?.trim() || !lastName?.trim() || !designation?.trim()) {
+        return res.status(400).json({ message: "First name, last name, and designation are required" });
+      }
+
+      // Validate designation
+      const validDesignations = ['Partner', 'Senior Manager', 'Manager', 'Associate', 'Senior Consultant', 'Analyst'];
+      if (!validDesignations.includes(designation.trim())) {
+        return res.status(400).json({ message: "Invalid designation" });
+      }
+
+      // Determine role based on designation
+      const role = designation.trim() === 'Partner' ? 'approver' : 'contributor';
+
+      // Update user profile directly for first-time setup
+      const updateData = {
+        firstName: firstName.trim(),
+        lastName: lastName.trim(),
+        designation: designation.trim(),
+        role,
+        updatedAt: new Date(),
+      };
+
+      const [updatedUser] = await db
+        .update(users)
+        .set(updateData)
+        .where(eq(users.id, userId))
+        .returning();
+
+      res.json({ 
+        message: "Profile setup completed successfully",
+        user: updatedUser 
+      });
+    } catch (error) {
+      console.error("Error setting up profile:", error);
+      res.status(500).json({ message: "Failed to set up profile" });
+    }
+  });
+
   // Profile update with image upload - creates approval request
   app.put('/api/profile/update', isAuthenticated, upload.single('profileImage'), async (req: any, res: any) => {
     try {
