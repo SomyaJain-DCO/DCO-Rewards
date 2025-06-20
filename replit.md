@@ -180,6 +180,7 @@ Changelog:
 - June 20, 2025. Fixed activity submission form error by correcting parameter order in apiRequest function call - activities can now be submitted properly without fetch method errors
 - June 20, 2025. Fixed Partner role assignment issue - updated user role from contributor to approver to enable access to pending approvals and administrative functions
 - June 20, 2025. Enhanced role assignment logic to automatically set both Partner and Senior Manager designations as approver role, ensuring proper access to administrative functions when users update their designation
+- June 20, 2025. Fixed approval functionality by correcting API request parameter order in approvals page - approve/reject buttons now work properly without fetch method errors
 ```
 
 ## User Preferences

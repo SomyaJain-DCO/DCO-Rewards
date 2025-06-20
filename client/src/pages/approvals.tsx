@@ -30,7 +30,7 @@ export default function Approvals() {
 
   const approveMutation = useMutation({
     mutationFn: async (data: { id: number; status: "approved" | "rejected"; rejectionReason?: string }) => {
-      return await apiRequest("POST", "/api/activities/approve", data);
+      return await apiRequest("/api/activities/approve", "POST", data);
     },
     onSuccess: () => {
       toast({
@@ -65,7 +65,7 @@ export default function Approvals() {
 
   const approveProfileChangeMutation = useMutation({
     mutationFn: async (data: { id: number; status: "approved" | "rejected"; rejectionReason?: string }) => {
-      return await apiRequest("POST", "/api/profile-change-requests/approve", data);
+      return await apiRequest("/api/profile-change-requests/approve", "POST", data);
     },
     onSuccess: () => {
       toast({
