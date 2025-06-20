@@ -17,32 +17,38 @@ import {
 } from "lucide-react";
 import { useState } from "react";
 
-const navigation = [
-  { name: "Dashboard", href: "/", icon: LayoutDashboard },
-  { name: "Submit Activity", href: "/submit-activity", icon: Plus },
-  { name: "My Activities", href: "/my-activities", icon: Activity },
-  { name: "All Activities", href: "/all-activities", icon: FileText },
-  { name: "Encashment", href: "/encashment", icon: Banknote },
-  { name: "My Profile", href: "/profile", icon: User },
-];
-
-const approverOnlyNavigation = [
-  { name: "Team Directory", href: "/team", icon: Users },
-];
-
-const approverNavigation = [
-  { name: "Approvals", href: "/approvals", icon: CheckSquare },
-];
-
-const accountNavigation = [
-  { name: "Settings", href: "/settings", icon: Settings },
-];
-
 export default function Sidebar() {
   const [location] = useLocation();
   const { user } = useAuth();
   const [isOpen, setIsOpen] = useState(false);
   const userRole = (user as any)?.role;
+  
+  // Define navigation based on user role
+  const getNavigation = () => {
+    if (userRole === "approver") {
+      return [
+        { name: "Dashboard", href: "/", icon: LayoutDashboard },
+        { name: "All Activities", href: "/all-activities", icon: FileText },
+        { name: "Approvals", href: "/approvals", icon: CheckSquare },
+        { name: "Team Directory", href: "/team", icon: Users },
+        { name: "My Profile", href: "/profile", icon: User },
+      ];
+    } else {
+      return [
+        { name: "Dashboard", href: "/", icon: LayoutDashboard },
+        { name: "Submit Activity", href: "/submit-activity", icon: Plus },
+        { name: "My Activities", href: "/my-activities", icon: Activity },
+        { name: "All Activities", href: "/all-activities", icon: FileText },
+        { name: "Encashment", href: "/encashment", icon: Banknote },
+        { name: "My Profile", href: "/profile", icon: User },
+      ];
+    }
+  };
+
+  const navigation = getNavigation();
+  const accountNavigation = [
+    { name: "Settings", href: "/settings", icon: Settings },
+  ];
 
   const handleLogout = () => {
     window.location.href = "/api/logout";
@@ -116,55 +122,7 @@ export default function Sidebar() {
               );
             })}
             
-            {userRole === "approver" && approverOnlyNavigation.map((item) => {
-              const isActive = location === item.href;
-              return (
-                <li key={item.name}>
-                  <Link href={item.href}>
-                    <div
-                      className={cn(
-                        "flex items-center px-4 py-3 text-primary-foreground/80 rounded-lg hover:bg-primary-foreground/10 transition-colors cursor-pointer",
-                        isActive && "bg-primary-foreground/20 border-r-2 border-primary-foreground text-primary-foreground"
-                      )}
-                      onClick={() => setIsOpen(false)}
-                    >
-                      <item.icon 
-                        className={cn(
-                          "mr-3 h-5 w-5",
-                          isActive ? "text-primary-foreground" : "text-primary-foreground/60"
-                        )} 
-                      />
-                      {item.name}
-                    </div>
-                  </Link>
-                </li>
-              );
-            })}
-            
-            {userRole === "approver" && approverNavigation.map((item) => {
-              const isActive = location === item.href;
-              return (
-                <li key={item.name}>
-                  <Link href={item.href}>
-                    <div
-                      className={cn(
-                        "flex items-center px-4 py-3 text-primary-foreground/80 rounded-lg hover:bg-primary-foreground/10 transition-colors cursor-pointer",
-                        isActive && "bg-primary-foreground/20 border-r-2 border-primary-foreground text-primary-foreground"
-                      )}
-                      onClick={() => setIsOpen(false)}
-                    >
-                      <item.icon 
-                        className={cn(
-                          "mr-3 h-5 w-5",
-                          isActive ? "text-primary-foreground" : "text-primary-foreground/60"
-                        )} 
-                      />
-                      {item.name}
-                    </div>
-                  </Link>
-                </li>
-              );
-            })}
+
           </ul>
           
           <div className="px-4 mt-8 mb-2">
