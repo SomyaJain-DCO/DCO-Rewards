@@ -190,7 +190,7 @@ export default function Approvals() {
               ))}
             </div>
           ) : pendingActivities && pendingActivities.length > 0 ? (
-            <div className="space-y-6">
+            <div className="space-y-3">
               {pendingActivities.map((activity: any) => (
                 <ApprovalCard
                   key={activity.id}

@@ -155,6 +155,7 @@ Changelog:
 - June 20, 2025. Added comprehensive file path functionality as alternative to URL for sharing local drive content locations with form validation, database storage, and activity display integration
 - June 20, 2025. Updated application branding from "Team Rewards Dashboard" to "DCo Rewards Dashboard" across all tabs and pages
 - June 20, 2025. Removed "My Activities" and "Encashment" tabs from approver navigation menu for cleaner administrative interface
+- June 20, 2025. Implemented concise approval cards with single-line format showing user, activity, and quick approve/reject actions for efficient review workflow
 ```
 
 ## User Preferences

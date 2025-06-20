@@ -45,83 +45,66 @@ export default function ApprovalCard({ activity, onApprove, onReject, isLoading 
   };
 
   return (
-    <div className="border border-gray-200 rounded-lg overflow-hidden">
-      <div className="p-6">
-        <div className="flex items-start justify-between mb-4">
-          <div className="flex items-start space-x-4">
-            <div className="w-12 h-12 bg-primary rounded-full flex items-center justify-center">
-              <span className="text-white font-medium">
-                {getInitials(activity.user.firstName, activity.user.lastName, activity.user.email)}
+    <div className="border border-gray-200 rounded-lg p-4 hover:bg-gray-50 transition-colors">
+      <div className="flex items-center justify-between">
+        {/* Left section: User and activity info */}
+        <div className="flex items-center space-x-3 flex-1 min-w-0">
+          <div className="w-10 h-10 bg-primary rounded-full flex items-center justify-center flex-shrink-0">
+            <span className="text-white text-sm font-medium">
+              {getInitials(activity.user.firstName, activity.user.lastName, activity.user.email)}
+            </span>
+          </div>
+          <div className="flex-1 min-w-0">
+            <div className="flex items-center space-x-2 text-sm">
+              <span className="font-medium text-gray-900 truncate">
+                {getDisplayName(activity.user)}
+              </span>
+              <span className="text-gray-500">•</span>
+              <span className="text-gray-600 truncate">
+                {activity.category.name}
+              </span>
+              <span className="text-gray-500">•</span>
+              <span className="text-gray-600">
+                {activity.title} | {activity.description}
               </span>
             </div>
-            <div>
-              <h4 className="font-semibold text-gray-800">{getDisplayName(activity.user)}</h4>
-              <p className="text-sm text-gray-600">
-                {activity.user.designation || "Team Member"} • {activity.user.department || "General"}
-              </p>
-              <p className="text-xs text-gray-500 mt-1">
-                Submitted {formatDistanceToNow(new Date(activity.createdAt))} ago
-              </p>
+            <div className="flex items-center space-x-2 text-xs text-gray-500 mt-1">
+              <span>{activity.category.points} pts</span>
+              <span>•</span>
+              <span>₹{activity.category.monetaryValue?.toLocaleString()}</span>
+              <span>•</span>
+              <span>{format(new Date(activity.activityDate), "MMM d")}</span>
+              <span>•</span>
+              <span>{formatDistanceToNow(new Date(activity.createdAt))} ago</span>
+              {activity.attachmentUrl && (
+                <>
+                  <span>•</span>
+                  <Paperclip className="h-3 w-3" />
+                </>
+              )}
             </div>
-          </div>
-          <Badge className="bg-yellow-100 text-yellow-800">Pending</Badge>
-        </div>
-        
-        <div className="bg-gray-50 p-4 rounded-lg mb-4">
-          <div className="grid grid-cols-2 gap-4 mb-3">
-            <div>
-              <p className="text-sm font-medium text-gray-700">Activity Type</p>
-              <p className="text-gray-800">{activity.category.name}</p>
-            </div>
-            <div>
-              <p className="text-sm font-medium text-gray-700">Points Claimed</p>
-              <p className="text-gray-800 font-semibold">
-                {activity.category.points} points (₹{activity.category.monetaryValue?.toLocaleString()})
-              </p>
-            </div>
-          </div>
-          <div className="mb-3">
-            <p className="text-sm font-medium text-gray-700">Title</p>
-            <p className="text-gray-800">{activity.title}</p>
-          </div>
-          <div>
-            <p className="text-sm font-medium text-gray-700">Description</p>
-            <p className="text-gray-600 text-sm">{activity.description}</p>
           </div>
         </div>
 
-        <div className="flex items-center justify-between">
-          <div className="flex items-center space-x-4">
-            <span className="text-sm text-gray-600 flex items-center">
-              <Calendar className="h-4 w-4 mr-1" />
-              Activity Date: {format(new Date(activity.activityDate), "MMM d, yyyy")}
-            </span>
-            {activity.attachmentUrl && (
-              <Button variant="ghost" size="sm" asChild>
-                <a href={activity.attachmentUrl} target="_blank" rel="noopener noreferrer">
-                  <ExternalLink className="h-4 w-4 mr-1" />
-                  View Attachment
-                </a>
-              </Button>
-            )}
-          </div>
-          <div className="flex space-x-3">
-            <Button
-              variant="outline"
-              onClick={onReject}
-              disabled={isLoading}
-              className="border-accent text-accent hover:bg-red-50"
-            >
-              Reject
-            </Button>
-            <Button
-              onClick={onApprove}
-              disabled={isLoading}
-              className="bg-secondary text-white hover:bg-secondary/90"
-            >
-              {isLoading ? "Processing..." : "Approve"}
-            </Button>
-          </div>
+        {/* Right section: Actions */}
+        <div className="flex items-center space-x-2 ml-4">
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={onReject}
+            disabled={isLoading}
+            className="border-red-300 text-red-600 hover:bg-red-50"
+          >
+            Reject
+          </Button>
+          <Button
+            size="sm"
+            onClick={onApprove}
+            disabled={isLoading}
+            className="bg-green-600 text-white hover:bg-green-700"
+          >
+            {isLoading ? "..." : "Approve"}
+          </Button>
         </div>
       </div>
     </div>
