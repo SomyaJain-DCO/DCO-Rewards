@@ -1,8 +1,10 @@
 import type { Express, Request, Response } from "express";
 import { createServer, type Server } from "http";
-import { storage } from "./mock-storage";
+import { storage } from "./storage";
 import { setupAuth, isAuthenticated } from "./replitAuth";
-import { insertActivitySchema, approveActivitySchema, insertEncashmentRequestSchema, approveEncashmentRequestSchema } from "@shared/schema";
+import { insertActivitySchema, approveActivitySchema, insertEncashmentRequestSchema, approveEncashmentRequestSchema, users, activities, encashmentRequests } from "@shared/schema";
+import { db } from "./db";
+import { eq } from "drizzle-orm";
 
 interface AuthenticatedRequest extends Request {
   user?: {
@@ -20,14 +22,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // Auth middleware
   await setupAuth(app);
 
-  // Seed activity categories on startup (with error handling)
-  try {
-    await storage.seedActivityCategories();
-    console.log("Activity categories seeded successfully");
-  } catch (error) {
-    console.warn("Failed to seed activity categories on startup:", error);
-    console.log("Application will continue without initial seeding");
-  }
+  // Seed activity categories on startup
+  await storage.seedActivityCategories();
 
   // Auth routes
   app.get('/api/auth/user', isAuthenticated, async (req: any, res: any) => {
@@ -64,44 +60,6 @@ export async function registerRoutes(app: Express): Promise<Server> {
     } catch (error) {
       console.error("Error updating designation and role:", error);
       res.status(500).json({ message: "Failed to update designation and role" });
-    }
-  });
-
-  // Complete profile after login
-  app.put('/api/profile/complete', isAuthenticated, async (req: any, res: any) => {
-    try {
-      const userId = req.user?.claims.sub;
-      if (!userId) return res.status(401).json({ message: "Unauthorized" });
-
-      const { firstName, lastName, designation, role } = req.body;
-
-      if (typeof firstName !== 'string' || !firstName.trim()) {
-        return res.status(400).json({ message: "First name is required" });
-      }
-
-      if (typeof lastName !== 'string' || !lastName.trim()) {
-        return res.status(400).json({ message: "Last name is required" });
-      }
-
-      if (typeof designation !== 'string') {
-        return res.status(400).json({ message: "Designation is required" });
-      }
-
-      if (typeof role !== 'string' || !['contributor', 'approver'].includes(role)) {
-        return res.status(400).json({ message: "Role must be either 'contributor' or 'approver'" });
-      }
-
-      const updatedUser = await storage.updateUserProfile(userId, {
-        firstName: firstName.trim(),
-        lastName: lastName.trim(),
-        designation: designation.trim(),
-        role
-      });
-      
-      res.json(updatedUser);
-    } catch (error) {
-      console.error("Error completing profile:", error);
-      res.status(500).json({ message: "Failed to complete profile" });
     }
   });
 
@@ -485,8 +443,15 @@ export async function registerRoutes(app: Express): Promise<Server> {
         if (sampleUser.id === userId) continue;
         
         try {
-          // Mock removal - this would normally delete from database
-          console.log(`Would remove sample user ${sampleUser.id} and their data`);
+          // Remove user's activities first
+          await db.delete(activities).where(eq(activities.userId, sampleUser.id));
+          
+          // Remove user's encashment requests
+          await db.delete(encashmentRequests).where(eq(encashmentRequests.userId, sampleUser.id));
+          
+          // Remove the user
+          await db.delete(users).where(eq(users.id, sampleUser.id));
+          
           removedCount++;
         } catch (error) {
           console.error(`Error removing sample user ${sampleUser.id}:`, error);

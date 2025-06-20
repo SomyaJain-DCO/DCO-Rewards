@@ -28,7 +28,6 @@ export interface IStorage {
   upsertUser(user: UpsertUser): Promise<User>;
   updateUserDesignation(id: string, designation: string): Promise<User>;
   updateUserDesignationAndRole(id: string, designation: string, role: string): Promise<User>;
-  updateUserProfile(id: string, profile: { firstName: string; lastName: string; designation: string; role: string }): Promise<User>;
   
   // Activity category operations
   getActivityCategories(): Promise<ActivityCategory[]>;
@@ -108,26 +107,6 @@ export class DatabaseStorage implements IStorage {
       .set({ 
         designation,
         role,
-        updatedAt: new Date(),
-      })
-      .where(eq(users.id, id))
-      .returning();
-    
-    if (!user) {
-      throw new Error("User not found");
-    }
-    
-    return user;
-  }
-
-  async updateUserProfile(id: string, profile: { firstName: string; lastName: string; designation: string; role: string }): Promise<User> {
-    const [user] = await db
-      .update(users)
-      .set({ 
-        firstName: profile.firstName,
-        lastName: profile.lastName,
-        designation: profile.designation,
-        role: profile.role,
         updatedAt: new Date(),
       })
       .where(eq(users.id, id))

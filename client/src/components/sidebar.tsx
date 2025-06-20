@@ -77,11 +77,11 @@ export default function Sidebar() {
 
       {/* Sidebar */}
       <aside className={cn(
-        "sidebar-container w-64 bg-primary text-primary-foreground shadow-lg fixed h-full z-40 transition-transform duration-300 ease-in-out flex flex-col",
+        "sidebar-container w-64 bg-primary text-primary-foreground shadow-lg fixed h-full z-40 transition-transform duration-300 ease-in-out",
         "lg:translate-x-0",
         isOpen ? "translate-x-0" : "-translate-x-full"
       )}>
-        <div className="p-6 border-b border-primary-foreground/10 flex-shrink-0">
+        <div className="p-6 border-b border-primary-foreground/10">
           <div className="text-center">
             <img 
               src="/dco-logo.png" 
@@ -93,7 +93,7 @@ export default function Sidebar() {
           </div>
         </div>
         
-        <nav className="mt-6 flex-1 overflow-y-auto pb-6">
+        <nav className="mt-6">
           <div className="px-4 mb-2">
             <span className="text-xs font-semibold text-primary-foreground/60 uppercase tracking-wide">
               NAVIGATION

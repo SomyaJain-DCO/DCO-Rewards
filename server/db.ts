@@ -1,41 +1,15 @@
-// Temporary mock database for development without database dependencies
-export const db = {
-  select: () => ({
-    from: () => ({
-      where: () => ({
-        returning: () => Promise.resolve([]),
-      }),
-      returning: () => Promise.resolve([]),
-      orderBy: () => Promise.resolve([]),
-      limit: () => Promise.resolve([]),
-    }),
-    returning: () => Promise.resolve([]),
-    orderBy: () => Promise.resolve([]),
-    limit: () => Promise.resolve([]),
-  }),
-  insert: () => ({
-    values: () => ({
-      returning: () => Promise.resolve([{ id: 1 }]),
-      onConflictDoUpdate: () => ({
-        returning: () => Promise.resolve([{ id: 1 }]),
-      }),
-    }),
-    returning: () => Promise.resolve([{ id: 1 }]),
-  }),
-  update: () => ({
-    set: () => ({
-      where: () => ({
-        returning: () => Promise.resolve([{ id: 1 }]),
-      }),
-      returning: () => Promise.resolve([{ id: 1 }]),
-    }),
-    returning: () => Promise.resolve([{ id: 1 }]),
-  }),
-  delete: () => ({
-    where: () => Promise.resolve({ rowCount: 1 }),
-  }),
-};
+import { Pool, neonConfig } from '@neondatabase/serverless';
+import { drizzle } from 'drizzle-orm/neon-serverless';
+import ws from "ws";
+import * as schema from "@shared/schema";
 
-export const pool = {
-  query: () => Promise.resolve({ rows: [], rowCount: 0 }),
-};
+neonConfig.webSocketConstructor = ws;
+
+if (!process.env.DATABASE_URL) {
+  throw new Error(
+    "DATABASE_URL must be set. Did you forget to provision a database?",
+  );
+}
+
+export const pool = new Pool({ connectionString: process.env.DATABASE_URL });
+export const db = drizzle({ client: pool, schema });
