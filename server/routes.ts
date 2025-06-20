@@ -39,6 +39,26 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Profile routes
+  app.put('/api/profile/designation', isAuthenticated, async (req: any, res: any) => {
+    try {
+      const userId = req.user?.claims.sub;
+      if (!userId) return res.status(401).json({ message: "Unauthorized" });
+
+      const { designation } = req.body;
+
+      if (typeof designation !== 'string') {
+        return res.status(400).json({ message: "Designation must be a string" });
+      }
+
+      const updatedUser = await storage.updateUserDesignation(userId, designation.trim());
+      res.json(updatedUser);
+    } catch (error) {
+      console.error("Error updating designation:", error);
+      res.status(500).json({ message: "Failed to update designation" });
+    }
+  });
+
   // Activity categories
   app.get('/api/activity-categories', isAuthenticated, async (req: any, res: any) => {
     try {

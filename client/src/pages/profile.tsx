@@ -1,4 +1,4 @@
-import { useQuery } from "@tanstack/react-query";
+import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { useAuth } from "@/hooks/useAuth";
 import { useEffect, useState, useMemo } from "react";
 import { useToast } from "@/hooks/use-toast";
@@ -9,16 +9,69 @@ import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import ActivityCard from "@/components/activity-card";
-import { User, Calendar, Trophy, DollarSign, Search, X } from "lucide-react";
+import { User, Calendar, Trophy, DollarSign, Search, X, Edit, Save, XCircle } from "lucide-react";
+import { apiRequest } from "@/lib/queryClient";
 
 export default function Profile() {
   const { toast } = useToast();
   const { user, isAuthenticated, isLoading } = useAuth();
+  const queryClient = useQueryClient();
   
   // Search and filter state for activity history
   const [searchTerm, setSearchTerm] = useState("");
   const [yearFilter, setYearFilter] = useState("all");
   const [monthFilter, setMonthFilter] = useState("all");
+  
+  // Designation editing state
+  const [isEditingDesignation, setIsEditingDesignation] = useState(false);
+  const [newDesignation, setNewDesignation] = useState("");
+
+  // Mutation for updating designation
+  const updateDesignationMutation = useMutation({
+    mutationFn: async (designation: string) => {
+      return await apiRequest("/api/profile/designation", "PUT", { designation });
+    },
+    onSuccess: () => {
+      toast({
+        title: "Success",
+        description: "Designation updated successfully",
+      });
+      setIsEditingDesignation(false);
+      queryClient.invalidateQueries({ queryKey: ["/api/auth/user"] });
+    },
+    onError: (error) => {
+      if (isUnauthorizedError(error)) {
+        toast({
+          title: "Unauthorized",
+          description: "You are logged out. Logging in again...",
+          variant: "destructive",
+        });
+        setTimeout(() => {
+          window.location.href = "/api/login";
+        }, 500);
+        return;
+      }
+      toast({
+        title: "Error",
+        description: error.message || "Failed to update designation",
+        variant: "destructive",
+      });
+    },
+  });
+
+  const handleEditDesignation = () => {
+    setNewDesignation((user as any)?.designation || "");
+    setIsEditingDesignation(true);
+  };
+
+  const handleSaveDesignation = () => {
+    updateDesignationMutation.mutate(newDesignation.trim());
+  };
+
+  const handleCancelEdit = () => {
+    setIsEditingDesignation(false);
+    setNewDesignation("");
+  };
 
   const { data: stats, isLoading: statsLoading } = useQuery({
     queryKey: ["/api/stats"],
@@ -202,9 +255,48 @@ export default function Profile() {
                   </span>
                 </div>
                 
-                {(user as any)?.designation && (
-                  <p className="text-gray-600">{(user as any).designation}</p>
-                )}
+                <div className="flex items-center gap-2">
+                  {isEditingDesignation ? (
+                    <div className="flex items-center gap-2 w-full">
+                      <Input
+                        value={newDesignation}
+                        onChange={(e) => setNewDesignation(e.target.value)}
+                        placeholder="Enter your designation"
+                        className="flex-1"
+                        disabled={updateDesignationMutation.isPending}
+                      />
+                      <Button
+                        size="sm"
+                        onClick={handleSaveDesignation}
+                        disabled={updateDesignationMutation.isPending || !newDesignation.trim()}
+                      >
+                        <Save className="w-4 h-4" />
+                      </Button>
+                      <Button
+                        size="sm"
+                        variant="outline"
+                        onClick={handleCancelEdit}
+                        disabled={updateDesignationMutation.isPending}
+                      >
+                        <XCircle className="w-4 h-4" />
+                      </Button>
+                    </div>
+                  ) : (
+                    <div className="flex items-center gap-2">
+                      <p className="text-gray-600">
+                        {(user as any)?.designation || "No designation set"}
+                      </p>
+                      <Button
+                        size="sm"
+                        variant="ghost"
+                        onClick={handleEditDesignation}
+                        className="p-1 h-auto"
+                      >
+                        <Edit className="w-4 h-4" />
+                      </Button>
+                    </div>
+                  )}
+                </div>
                 {(user as any)?.department && (
                   <p className="text-gray-600">{(user as any).department}</p>
                 )}
