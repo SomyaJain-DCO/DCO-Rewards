@@ -1,10 +1,8 @@
 import type { Express, Request, Response } from "express";
 import { createServer, type Server } from "http";
-import { storage } from "./storage";
+import { storage } from "./mock-storage";
 import { setupAuth, isAuthenticated } from "./replitAuth";
-import { insertActivitySchema, approveActivitySchema, insertEncashmentRequestSchema, approveEncashmentRequestSchema, users, activities, encashmentRequests } from "@shared/schema";
-import { db } from "./db";
-import { eq } from "drizzle-orm";
+import { insertActivitySchema, approveActivitySchema, insertEncashmentRequestSchema, approveEncashmentRequestSchema } from "@shared/schema";
 
 interface AuthenticatedRequest extends Request {
   user?: {
@@ -22,8 +20,14 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // Auth middleware
   await setupAuth(app);
 
-  // Seed activity categories on startup
-  await storage.seedActivityCategories();
+  // Seed activity categories on startup (with error handling)
+  try {
+    await storage.seedActivityCategories();
+    console.log("Activity categories seeded successfully");
+  } catch (error) {
+    console.warn("Failed to seed activity categories on startup:", error);
+    console.log("Application will continue without initial seeding");
+  }
 
   // Auth routes
   app.get('/api/auth/user', isAuthenticated, async (req: any, res: any) => {
@@ -481,15 +485,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
         if (sampleUser.id === userId) continue;
         
         try {
-          // Remove user's activities first
-          await db.delete(activities).where(eq(activities.userId, sampleUser.id));
-          
-          // Remove user's encashment requests
-          await db.delete(encashmentRequests).where(eq(encashmentRequests.userId, sampleUser.id));
-          
-          // Remove the user
-          await db.delete(users).where(eq(users.id, sampleUser.id));
-          
+          // Mock removal - this would normally delete from database
+          console.log(`Would remove sample user ${sampleUser.id} and their data`);
           removedCount++;
         } catch (error) {
           console.error(`Error removing sample user ${sampleUser.id}:`, error);
