@@ -30,7 +30,19 @@ export default function Admin() {
 
   const cleanupMutation = useMutation({
     mutationFn: async () => {
-      return await apiRequest("/api/admin/cleanup-samples", "DELETE");
+      const response = await fetch("/api/admin/cleanup-samples", {
+        method: "DELETE",
+        headers: {
+          "Content-Type": "application/json",
+        },
+      });
+      
+      if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(errorData.message || "Failed to cleanup sample data");
+      }
+      
+      return await response.json();
     },
     onSuccess: (data) => {
       setCleanupResult(data);
