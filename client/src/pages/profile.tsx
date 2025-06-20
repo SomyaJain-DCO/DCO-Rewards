@@ -1,20 +1,114 @@
 import { useQuery } from "@tanstack/react-query";
 import { useAuth } from "@/hooks/useAuth";
-import { useEffect } from "react";
+import { useEffect, useState, useMemo } from "react";
 import { useToast } from "@/hooks/use-toast";
 import { isUnauthorizedError } from "@/lib/authUtils";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { User, Calendar, Trophy, DollarSign } from "lucide-react";
+import { Input } from "@/components/ui/input";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import ActivityCard from "@/components/activity-card";
+import { User, Calendar, Trophy, DollarSign, Search, X } from "lucide-react";
 
 export default function Profile() {
   const { toast } = useToast();
   const { user, isAuthenticated, isLoading } = useAuth();
   
+  // Search and filter state for activity history
+  const [searchTerm, setSearchTerm] = useState("");
+  const [yearFilter, setYearFilter] = useState("all");
+  const [monthFilter, setMonthFilter] = useState("all");
+
   const { data: stats, isLoading: statsLoading } = useQuery({
     queryKey: ["/api/stats"],
     enabled: isAuthenticated,
   });
+
+  const { data: activities, isLoading: activitiesLoading } = useQuery({
+    queryKey: ["/api/activities/my"],
+    enabled: isAuthenticated,
+  });
+
+  // Get unique years and months for filter options
+  const availableYears = useMemo(() => {
+    if (!activities) return [];
+    const years = [...new Set(activities.map((activity: any) => 
+      new Date(activity.activityDate).getFullYear().toString()
+    ))].sort((a, b) => b.localeCompare(a));
+    return years;
+  }, [activities]);
+
+  const availableMonths = useMemo(() => {
+    const months = [
+      { value: "01", label: "January" },
+      { value: "02", label: "February" },
+      { value: "03", label: "March" },
+      { value: "04", label: "April" },
+      { value: "05", label: "May" },
+      { value: "06", label: "June" },
+      { value: "07", label: "July" },
+      { value: "08", label: "August" },
+      { value: "09", label: "September" },
+      { value: "10", label: "October" },
+      { value: "11", label: "November" },
+      { value: "12", label: "December" }
+    ];
+    return months;
+  }, []);
+
+  // Filter activities based on search criteria
+  const filteredActivities = useMemo(() => {
+    if (!activities) return [];
+    
+    return activities.filter((activity: any) => {
+      // Search term filter (title, description, category)
+      if (searchTerm) {
+        const searchLower = searchTerm.toLowerCase();
+        const matchesTitle = activity.title.toLowerCase().includes(searchLower);
+        const matchesDescription = activity.description.toLowerCase().includes(searchLower);
+        const matchesCategory = activity.category.name.toLowerCase().includes(searchLower);
+        if (!matchesTitle && !matchesDescription && !matchesCategory) return false;
+      }
+
+      // Year filter
+      if (yearFilter && yearFilter !== "all") {
+        const activityYear = new Date(activity.activityDate).getFullYear().toString();
+        if (activityYear !== yearFilter) return false;
+      }
+
+      // Month filter
+      if (monthFilter && monthFilter !== "all") {
+        const activityMonth = (new Date(activity.activityDate).getMonth() + 1).toString().padStart(2, '0');
+        if (activityMonth !== monthFilter) return false;
+      }
+
+      return true;
+    });
+  }, [activities, searchTerm, yearFilter, monthFilter]);
+
+  // Clear all filters
+  const clearFilters = () => {
+    setSearchTerm("");
+    setYearFilter("all");
+    setMonthFilter("all");
+  };
+
+  // Activity breakdown by category for overview
+  const activityBreakdown = useMemo(() => {
+    if (!activities) return {};
+    
+    return activities.reduce((acc: any, activity: any) => {
+      if (activity.status === "approved") {
+        const categoryName = activity.category.name;
+        if (!acc[categoryName]) {
+          acc[categoryName] = 0;
+        }
+        acc[categoryName]++;
+      }
+      return acc;
+    }, {});
+  }, [activities]);
 
   // Redirect to home if not authenticated
   useEffect(() => {
@@ -97,6 +191,21 @@ export default function Profile() {
                 </p>
               </div>
 
+              {/* Activity Overview */}
+              <div className="space-y-2 text-sm">
+                {Object.keys(activityBreakdown).length > 0 && (
+                  <div>
+                    <p className="font-medium text-gray-700 mb-2">Activity Overview</p>
+                    {Object.entries(activityBreakdown).map(([category, count]) => (
+                      <div key={category} className="flex justify-between">
+                        <span className="text-gray-600">{category}</span>
+                        <span className="font-medium">{count as number}</span>
+                      </div>
+                    ))}
+                  </div>
+                )}
+              </div>
+
               {/* User Details */}
               <div className="space-y-2 text-sm">
                 <div className="flex items-center justify-center space-x-2">
@@ -131,30 +240,30 @@ export default function Profile() {
               <CardTitle>Performance Summary</CardTitle>
             </CardHeader>
             <CardContent>
-              <div className="space-y-4">
-                <div className="flex items-center justify-between p-4 bg-gray-50 rounded-lg">
+              <div className="grid grid-cols-2 gap-4">
+                <div className="bg-blue-50 p-4 rounded-lg">
                   <div className="flex items-center space-x-3">
                     <Trophy className="text-blue-600 text-xl" />
                     <div>
-                      <p className="text-sm text-gray-600">Total Points Earned</p>
+                      <p className="text-sm text-gray-600">Total Points</p>
                       <p className="text-2xl font-bold text-gray-800">{stats?.totalPoints || 0}</p>
                     </div>
                   </div>
                 </div>
                 
                 {userRole === 'approver' && (
-                  <div className="flex items-center justify-between p-4 bg-gray-50 rounded-lg">
+                  <div className="bg-green-50 p-4 rounded-lg">
                     <div className="flex items-center space-x-3">
                       <DollarSign className="text-green-600 text-xl" />
                       <div>
-                        <p className="text-sm text-gray-600">Total Monetary Value</p>
-                        <p className="text-2xl font-bold text-gray-800">₹{stats?.totalEarnings?.toLocaleString() || 0}</p>
+                        <p className="text-sm text-gray-600">Total Earnings</p>
+                        <p className="text-xl font-bold text-gray-800">₹{stats?.totalEarnings?.toLocaleString() || 0}</p>
                       </div>
                     </div>
                   </div>
                 )}
                 
-                <div className="flex items-center justify-between p-4 bg-gray-50 rounded-lg">
+                <div className="bg-purple-50 p-4 rounded-lg">
                   <div className="flex items-center space-x-3">
                     <Calendar className="text-purple-600 text-xl" />
                     <div>
@@ -164,12 +273,14 @@ export default function Profile() {
                   </div>
                 </div>
                 
-                <div className="flex items-center justify-between p-4 bg-gray-50 rounded-lg">
+                <div className="bg-orange-50 p-4 rounded-lg">
                   <div className="flex items-center space-x-3">
                     <User className="text-orange-600 text-xl" />
                     <div>
-                      <p className="text-sm text-gray-600">Team Ranking</p>
-                      <p className="text-xl font-bold text-gray-800">#{stats?.ranking || 'N/A'} of {stats?.totalMembers || 0}</p>
+                      <p className="text-sm text-gray-600">Ranking</p>
+                      <p className="text-lg font-bold text-gray-800">
+                        #{stats?.ranking || 'N/A'} of {stats?.totalMembers || 0}
+                      </p>
                     </div>
                   </div>
                 </div>
@@ -178,6 +289,100 @@ export default function Profile() {
           </Card>
         </div>
       </div>
+
+      {/* Activity History */}
+      <Card>
+        <CardHeader>
+          <div className="flex justify-between items-center">
+            <CardTitle>Activity History</CardTitle>
+            <div className="flex space-x-2">
+              {(searchTerm || yearFilter !== "all" || monthFilter !== "all") && (
+                <Button
+                  onClick={clearFilters}
+                  variant="outline"
+                  size="sm"
+                  className="flex items-center space-x-1"
+                >
+                  <X className="w-4 h-4" />
+                  <span>Clear Filters</span>
+                </Button>
+              )}
+            </div>
+          </div>
+          
+          {/* Search and Filters */}
+          <div className="flex flex-col sm:flex-row gap-4 mt-4">
+            <div className="relative flex-1">
+              <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-4 h-4" />
+              <Input
+                placeholder="Search activities..."
+                value={searchTerm}
+                onChange={(e) => setSearchTerm(e.target.value)}
+                className="pl-10"
+              />
+            </div>
+            
+            <Select value={yearFilter} onValueChange={setYearFilter}>
+              <SelectTrigger className="w-full sm:w-32">
+                <SelectValue placeholder="Year" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="all">All Years</SelectItem>
+                {availableYears.map((year) => (
+                  <SelectItem key={year} value={year}>
+                    {year}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+            
+            <Select value={monthFilter} onValueChange={setMonthFilter}>
+              <SelectTrigger className="w-full sm:w-32">
+                <SelectValue placeholder="Month" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="all">All Months</SelectItem>
+                {availableMonths.map((month) => (
+                  <SelectItem key={month.value} value={month.value}>
+                    {month.label}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          </div>
+        </CardHeader>
+        <CardContent>
+          {activitiesLoading ? (
+            <div className="space-y-4">
+              {[...Array(3)].map((_, i) => (
+                <div key={i} className="animate-pulse">
+                  <div className="bg-gray-200 h-32 rounded-lg"></div>
+                </div>
+              ))}
+            </div>
+          ) : filteredActivities.length === 0 ? (
+            <div className="text-center py-8">
+              <Calendar className="mx-auto h-12 w-12 text-gray-400" />
+              <h3 className="mt-2 text-sm font-medium text-gray-900">No activities found</h3>
+              <p className="mt-1 text-sm text-gray-500">
+                {searchTerm || yearFilter !== "all" || monthFilter !== "all" 
+                  ? "Try adjusting your search criteria." 
+                  : "You haven't submitted any activities yet."}
+              </p>
+            </div>
+          ) : (
+            <div className="space-y-4">
+              {filteredActivities.map((activity: any) => (
+                <ActivityCard
+                  key={activity.id}
+                  activity={activity}
+                  hideUserName={true}
+                />
+              ))}
+            </div>
+          )}
+        </CardContent>
+      </Card>
     </div>
   );
 }
