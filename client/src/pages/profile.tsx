@@ -255,14 +255,14 @@ export default function Profile() {
                   </span>
                 </div>
                 
-                <div className="flex items-center gap-2">
+                <div className="flex items-center justify-center gap-2">
                   {isEditingDesignation ? (
-                    <div className="flex items-center gap-2 w-full">
+                    <div className="flex items-center justify-center gap-2 w-full max-w-md">
                       <Input
                         value={newDesignation}
                         onChange={(e) => setNewDesignation(e.target.value)}
                         placeholder="Enter your designation"
-                        className="flex-1"
+                        className="flex-1 text-center"
                         disabled={updateDesignationMutation.isPending}
                       />
                       <Button
@@ -282,8 +282,8 @@ export default function Profile() {
                       </Button>
                     </div>
                   ) : (
-                    <div className="flex items-center gap-2">
-                      <p className="text-gray-600">
+                    <div className="flex items-center justify-center gap-2">
+                      <p className="text-gray-600 text-center">
                         {(user as any)?.designation || "No designation set"}
                       </p>
                       <Button
