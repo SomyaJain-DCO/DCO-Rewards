@@ -63,8 +63,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  // Complete profile after login
-  app.put('/api/profile/complete', isAuthenticated, async (req: any, res: any) => {
+  // Complete profile after login - allow pending users
+  app.put('/api/profile/complete', allowPendingUsers, async (req: any, res: any) => {
     try {
       const userId = req.user?.claims.sub;
       if (!userId) return res.status(401).json({ message: "Unauthorized" });
