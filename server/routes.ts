@@ -193,6 +193,17 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Get all activities (for all-activities page)
+  app.get('/api/activities/all', isAuthenticated, async (req: any, res: any) => {
+    try {
+      const activities = await storage.getAllActivities();
+      res.json(activities);
+    } catch (error) {
+      console.error("Error fetching all activities:", error);
+      res.status(500).json({ message: "Failed to fetch all activities" });
+    }
+  });
+
   // Get team members (approvers only)
   app.get('/api/team', isAuthenticated, async (req: any, res: any) => {
     try {

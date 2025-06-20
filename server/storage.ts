@@ -38,6 +38,7 @@ export interface IStorage {
   getMonthlyLeaderboard(): Promise<Array<User & { totalPoints: number; totalEarnings: number }>>;
   getYearlyLeaderboard(): Promise<Array<User & { totalPoints: number; totalEarnings: number }>>;
   getRecentActivities(limit?: number): Promise<ActivityWithDetails[]>;
+  getAllActivities(): Promise<ActivityWithDetails[]>;
   
   // Team operations
   getAllUsers(): Promise<User[]>;
@@ -433,6 +434,61 @@ export class DatabaseStorage implements IStorage {
       .where(eq(activities.status, "approved"))
       .orderBy(desc(activities.approvedAt))
       .limit(limit) as ActivityWithDetails[];
+  }
+
+  async getAllActivities(): Promise<ActivityWithDetails[]> {
+    return await db
+      .select({
+        id: activities.id,
+        userId: activities.userId,
+        categoryId: activities.categoryId,
+        title: activities.title,
+        description: activities.description,
+        activityDate: activities.activityDate,
+        status: activities.status,
+        approvedBy: activities.approvedBy,
+        approvedAt: activities.approvedAt,
+        rejectionReason: activities.rejectionReason,
+        attachmentUrl: activities.attachmentUrl,
+        createdAt: activities.createdAt,
+        updatedAt: activities.updatedAt,
+        user: {
+          id: users.id,
+          email: users.email,
+          firstName: users.firstName,
+          lastName: users.lastName,
+          profileImageUrl: users.profileImageUrl,
+          role: users.role,
+          designation: users.designation,
+          department: users.department,
+          createdAt: users.createdAt,
+          updatedAt: users.updatedAt,
+        },
+        category: {
+          id: activityCategories.id,
+          name: activityCategories.name,
+          points: activityCategories.points,
+          monetaryValue: activityCategories.monetaryValue,
+          description: activityCategories.description,
+        },
+        approver: {
+          id: sql`approver.id`,
+          email: sql`approver.email`,
+          firstName: sql`approver.first_name`,
+          lastName: sql`approver.last_name`,
+          profileImageUrl: sql`approver.profile_image_url`,
+          role: sql`approver.role`,
+          designation: sql`approver.designation`,
+          department: sql`approver.department`,
+          createdAt: sql`approver.created_at`,
+          updatedAt: sql`approver.updated_at`,
+        },
+      })
+      .from(activities)
+      .innerJoin(users, eq(activities.userId, users.id))
+      .innerJoin(activityCategories, eq(activities.categoryId, activityCategories.id))
+      .leftJoin(sql`users as approver`, sql`activities.approved_by = approver.id`)
+      .orderBy(desc(activities.createdAt)) as ActivityWithDetails[];
   }
 
   async getAllUsers(): Promise<User[]> {

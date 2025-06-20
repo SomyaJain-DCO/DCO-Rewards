@@ -10,13 +10,17 @@ import {
   Settings, 
   LogOut,
   Menu,
-  X
+  X,
+  Activity,
+  FileText
 } from "lucide-react";
 import { useState } from "react";
 
 const navigation = [
   { name: "Dashboard", href: "/", icon: LayoutDashboard },
   { name: "Submit Activity", href: "/submit-activity", icon: Plus },
+  { name: "My Activities", href: "/my-activities", icon: Activity },
+  { name: "All Activities", href: "/all-activities", icon: FileText },
   { name: "My Profile", href: "/profile", icon: User },
 ];
 
