@@ -7,11 +7,11 @@ export default function Landing() {
     <div className="min-h-screen bg-gradient-to-br from-blue-50 to-white">
       <div className="container mx-auto px-4 py-16">
         <div className="text-center mb-12">
-          <div className="flex justify-center mb-6">
+          <div className="flex justify-center mb-4">
             <img 
               src="/dco-logo.png" 
               alt="Dhadda & Co. Logo" 
-              className="h-20 w-auto object-contain"
+              className="h-24 w-auto object-contain"
             />
           </div>
           <h1 className="text-4xl font-bold text-gray-900 mb-4">
