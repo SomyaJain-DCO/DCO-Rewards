@@ -24,14 +24,21 @@ const getOidcConfig = memoize(
 
 export function getSession() {
   const sessionTtl = 7 * 24 * 60 * 60 * 1000; // 1 week
-  // Use memory store instead of PostgreSQL to avoid connection issues
+  const pgStore = connectPg(session);
+  const sessionStore = new pgStore({
+    conString: process.env.DATABASE_URL,
+    createTableIfMissing: false,
+    ttl: sessionTtl,
+    tableName: "sessions",
+  });
   return session({
-    secret: process.env.SESSION_SECRET || "fallback-secret-for-development",
+    secret: process.env.SESSION_SECRET!,
+    store: sessionStore,
     resave: false,
     saveUninitialized: false,
     cookie: {
       httpOnly: true,
-      secure: false, // Allow HTTP in development
+      secure: true,
       maxAge: sessionTtl,
     },
   });
@@ -50,11 +57,12 @@ function updateUserSession(
 async function upsertUser(
   claims: any,
 ) {
-  // Simplified - no database calls, just log the user info
-  console.log("User logged in:", {
+  await storage.upsertUser({
     id: claims["sub"],
     email: claims["email"],
-    name: `${claims["first_name"] || ''} ${claims["last_name"] || ''}`.trim()
+    firstName: claims["first_name"],
+    lastName: claims["last_name"],
+    profileImageUrl: claims["profile_image_url"],
   });
 }
 
@@ -120,56 +128,6 @@ export async function setupAuth(app: Express) {
 }
 
 export const isAuthenticated: RequestHandler = async (req, res, next) => {
-  const user = req.user as any;
-
-  if (!req.isAuthenticated() || !user.expires_at) {
-    return res.status(401).json({ message: "Unauthorized" });
-  }
-
-  const now = Math.floor(Date.now() / 1000);
-  if (now <= user.expires_at) {
-    // Check if user is approved in database
-    const dbUser = await storage.getUser(user.claims.sub);
-    if (!dbUser || dbUser.status !== "approved") {
-      return res.status(403).json({ 
-        message: "Account pending approval", 
-        status: dbUser?.status || "pending",
-        rejectionReason: dbUser?.rejectionReason 
-      });
-    }
-    return next();
-  }
-
-  const refreshToken = user.refresh_token;
-  if (!refreshToken) {
-    res.status(401).json({ message: "Unauthorized" });
-    return;
-  }
-
-  try {
-    const config = await getOidcConfig();
-    const tokenResponse = await client.refreshTokenGrant(config, refreshToken);
-    updateUserSession(user, tokenResponse);
-    
-    // Check if user is approved in database after token refresh
-    const dbUser = await storage.getUser(user.claims.sub);
-    if (!dbUser || dbUser.status !== "approved") {
-      return res.status(403).json({ 
-        message: "Account pending approval", 
-        status: dbUser?.status || "pending",
-        rejectionReason: dbUser?.rejectionReason 
-      });
-    }
-    
-    return next();
-  } catch (error) {
-    res.status(401).json({ message: "Unauthorized" });
-    return;
-  }
-};
-
-// Allow profile completion and basic user info access for pending users
-export const allowPendingUsers: RequestHandler = async (req, res, next) => {
   const user = req.user as any;
 
   if (!req.isAuthenticated() || !user.expires_at) {
