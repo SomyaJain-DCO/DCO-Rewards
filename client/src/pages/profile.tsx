@@ -89,8 +89,8 @@ export default function Profile() {
     },
     onSuccess: () => {
       toast({
-        title: "Request Submitted",
-        description: "Your profile update request has been submitted for approval by Senior Manager or Partner.",
+        title: "Profile Updated",
+        description: "Your profile has been updated successfully.",
       });
       setIsEditDialogOpen(false);
       // Reset form state
@@ -115,7 +115,7 @@ export default function Profile() {
       }
       toast({
         title: "Error",
-        description: error.message || "Failed to submit profile update request",
+        description: error.message || "Failed to update profile",
         variant: "destructive",
       });
     },

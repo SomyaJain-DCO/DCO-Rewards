@@ -151,7 +151,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  // Profile update with image upload - creates approval request
+  // Profile update with image upload - direct update
   app.put('/api/profile/update', isAuthenticated, upload.single('profileImage'), async (req: any, res: any) => {
     try {
       const userId = req.user?.claims.sub;
@@ -176,29 +176,47 @@ export async function registerRoutes(app: Express): Promise<Server> {
       if (req.file) {
         // Create relative URL for the uploaded file
         profileImageUrl = `/uploads/profiles/${req.file.filename}`;
+        
+        // Clean up old profile image if exists
+        const currentUser = await storage.getUser(userId);
+        if (currentUser?.profileImageUrl && currentUser.profileImageUrl.startsWith('/uploads/')) {
+          const oldImagePath = path.join(process.cwd(), currentUser.profileImageUrl);
+          try {
+            await fs.unlink(oldImagePath);
+          } catch (error) {
+            console.log("Could not delete old profile image:", error);
+          }
+        }
       }
 
-      // Create profile change request instead of directly updating
-      const requestData = {
-        userId,
-        requestedFirstName: firstName.trim(),
-        requestedLastName: lastName.trim(),
-        requestedDesignation: designation.trim(),
-        profileImageUrl,
-        status: "pending" as const,
+      // Determine role based on designation
+      const role = designation.trim() === 'Partner' ? 'approver' : 'contributor';
+
+      // Update user profile directly
+      const updateData: any = {
+        firstName: firstName.trim(),
+        lastName: lastName.trim(),
+        designation: designation.trim(),
+        role,
+        updatedAt: new Date(),
       };
 
-      const [profileChangeRequest] = await db
-        .insert(profileChangeRequests)
-        .values(requestData)
+      if (profileImageUrl) {
+        updateData.profileImageUrl = profileImageUrl;
+      }
+
+      const [updatedUser] = await db
+        .update(users)
+        .set(updateData)
+        .where(eq(users.id, userId))
         .returning();
 
       res.json({ 
-        message: "Profile update request submitted for approval. Changes will be applied once approved by Senior Manager or Partner.",
-        request: profileChangeRequest
+        message: "Profile updated successfully",
+        user: updatedUser 
       });
     } catch (error) {
-      console.error("Error creating profile change request:", error);
+      console.error("Error updating profile:", error);
       
       // Clean up uploaded file if there was an error
       if (req.file) {
@@ -209,7 +227,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
         }
       }
       
-      res.status(500).json({ message: "Failed to submit profile update request" });
+      res.status(500).json({ message: "Failed to update profile" });
     }
   });
 
