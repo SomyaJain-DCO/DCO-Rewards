@@ -169,6 +169,7 @@ Changelog:
 - June 20, 2025. Added comprehensive profile picture upload functionality to My Profile section with image preview, 5MB file size limit, automatic file cleanup, and secure file storage in uploads/profiles directory
 - June 20, 2025. Performed comprehensive database cleanup removing all user accounts except primary user (sethishuchi27@gmail.com), including deletion of 16 activities and 5 user accounts to maintain single-user system
 - June 20, 2025. Added delete functionality to My Activities tab allowing users to remove pending activities only, with confirmation dialog and complete backend validation to ensure only pending activities can be deleted
+- June 20, 2025. Fixed profile update system to create approval requests instead of direct changes - implemented profile_change_requests table with proper approval workflow requiring Senior Manager or Partner authorization before applying changes
 ```
 
 ## User Preferences
