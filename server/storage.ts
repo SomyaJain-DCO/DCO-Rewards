@@ -34,6 +34,8 @@ export interface IStorage {
   // Activity operations
   createActivity(activity: InsertActivity): Promise<Activity>;
   getActivitiesByUser(userId: string): Promise<ActivityWithDetails[]>;
+  getActivityById(id: number): Promise<Activity | undefined>;
+  updateActivity(id: number, activity: InsertActivity): Promise<Activity>;
   getPendingActivities(): Promise<ActivityWithDetails[]>;
   approveActivity(approval: ApproveActivity, approverId: string): Promise<Activity>;
   
@@ -114,6 +116,23 @@ export class DatabaseStorage implements IStorage {
   async createActivity(activity: InsertActivity): Promise<Activity> {
     const [newActivity] = await db.insert(activities).values(activity).returning();
     return newActivity;
+  }
+
+  async getActivityById(id: number): Promise<Activity | undefined> {
+    const [activity] = await db.select().from(activities).where(eq(activities.id, id));
+    return activity;
+  }
+
+  async updateActivity(id: number, activityData: InsertActivity): Promise<Activity> {
+    const [updatedActivity] = await db
+      .update(activities)
+      .set({
+        ...activityData,
+        updatedAt: new Date(),
+      })
+      .where(eq(activities.id, id))
+      .returning();
+    return updatedActivity;
   }
 
   async getActivitiesByUser(userId: string): Promise<ActivityWithDetails[]> {

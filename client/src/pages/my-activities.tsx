@@ -1,24 +1,49 @@
-import { useQuery } from "@tanstack/react-query";
+import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
+import { Button } from "@/components/ui/button";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Calendar, FileText, User, Trophy, Clock, Search, X, ExternalLink } from "lucide-react";
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
+import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
+import { Textarea } from "@/components/ui/textarea";
+import { Calendar, FileText, User, Trophy, Clock, Search, X, ExternalLink, Edit } from "lucide-react";
 import { useAuth } from "@/hooks/useAuth";
 import { useLocation } from "wouter";
 import { format } from "date-fns";
 import { useState, useMemo } from "react";
+import { useForm } from "react-hook-form";
+import { zodResolver } from "@hookform/resolvers/zod";
+import { z } from "zod";
+import { apiRequest } from "@/lib/queryClient";
+import { useToast } from "@/hooks/use-toast";
 
 type ActivityFilter = "all" | "monthly" | "pending";
 
+const editFormSchema = z.object({
+  categoryId: z.number().min(1, "Please select a category"),
+  title: z.string().min(1, "Title is required"),
+  description: z.string().min(10, "Description must be at least 10 characters"),
+  activityDate: z.string().min(1, "Activity date is required"),
+  attachmentUrl: z.string().optional(),
+});
+
+type EditFormData = z.infer<typeof editFormSchema>;
+
 export default function MyActivities() {
   const { user } = useAuth();
+  const { toast } = useToast();
+  const queryClient = useQueryClient();
   const [location] = useLocation();
   
   // Search and filter state
   const [searchTerm, setSearchTerm] = useState("");
   const [yearFilter, setYearFilter] = useState("all");
   const [categoryFilter, setCategoryFilter] = useState("all");
+  
+  // Edit state
+  const [editingActivity, setEditingActivity] = useState<any>(null);
+  const [isEditModalOpen, setIsEditModalOpen] = useState(false);
   
   // Get filter from URL search params
   const searchParams = new URLSearchParams(window.location.search);
@@ -30,6 +55,67 @@ export default function MyActivities() {
     queryKey: ["/api/user-activities", user?.id],
     enabled: !!user?.id,
   });
+
+  const { data: categories } = useQuery({
+    queryKey: ["/api/activity-categories"],
+    enabled: !!user,
+  });
+
+  // Edit form
+  const editForm = useForm<EditFormData>({
+    resolver: zodResolver(editFormSchema),
+    defaultValues: {
+      categoryId: 0,
+      title: "",
+      description: "",
+      activityDate: "",
+      attachmentUrl: "",
+    },
+  });
+
+  // Edit mutation
+  const editMutation = useMutation({
+    mutationFn: async (data: EditFormData & { id: number }) => {
+      const { id, ...updateData } = data;
+      return await apiRequest(`/api/activities/${id}`, "PUT", updateData);
+    },
+    onSuccess: () => {
+      toast({
+        title: "Success",
+        description: "Activity updated successfully!",
+      });
+      queryClient.invalidateQueries({ queryKey: ["/api/user-activities", user?.id] });
+      setIsEditModalOpen(false);
+      setEditingActivity(null);
+      editForm.reset();
+    },
+    onError: (error: any) => {
+      toast({
+        title: "Error",
+        description: error.message || "Failed to update activity",
+        variant: "destructive",
+      });
+    },
+  });
+
+  // Edit handlers
+  const handleEditActivity = (activity: any) => {
+    setEditingActivity(activity);
+    editForm.reset({
+      categoryId: activity.category.id,
+      title: activity.title,
+      description: activity.description,
+      activityDate: format(new Date(activity.activityDate), "yyyy-MM-dd"),
+      attachmentUrl: activity.attachmentUrl || "",
+    });
+    setIsEditModalOpen(true);
+  };
+
+  const onEditSubmit = (data: EditFormData) => {
+    if (editingActivity) {
+      editMutation.mutate({ ...data, id: editingActivity.id });
+    }
+  };
 
   // Get unique years and categories for filter options
   const availableYears = useMemo(() => {
@@ -241,6 +327,17 @@ export default function MyActivities() {
                             <ExternalLink className="w-4 h-4" />
                           </a>
                         )}
+                        {activity.status === "pending" && (
+                          <Button
+                            size="sm"
+                            variant="outline"
+                            onClick={() => handleEditActivity(activity)}
+                            className="h-6 px-2 text-xs"
+                          >
+                            <Edit className="w-3 h-3 mr-1" />
+                            Edit
+                          </Button>
+                        )}
                         {getStatusBadge(activity.status)}
                       </div>
                     </div>
@@ -300,6 +397,120 @@ export default function MyActivities() {
           ))}
         </div>
       )}
+
+      {/* Edit Modal */}
+      <Dialog open={isEditModalOpen} onOpenChange={setIsEditModalOpen}>
+        <DialogContent className="sm:max-w-[500px]">
+          <DialogHeader>
+            <DialogTitle>Edit Activity</DialogTitle>
+          </DialogHeader>
+          
+          <Form {...editForm}>
+            <form onSubmit={editForm.handleSubmit(onEditSubmit)} className="space-y-4">
+              <FormField
+                control={editForm.control}
+                name="categoryId"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Category</FormLabel>
+                    <Select onValueChange={(value) => field.onChange(parseInt(value))} value={field.value?.toString()}>
+                      <FormControl>
+                        <SelectTrigger>
+                          <SelectValue placeholder="Select a category" />
+                        </SelectTrigger>
+                      </FormControl>
+                      <SelectContent>
+                        {categories?.map((category: any) => (
+                          <SelectItem key={category.id} value={category.id.toString()}>
+                            {category.name} ({category.points} pts)
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+
+              <FormField
+                control={editForm.control}
+                name="title"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Title</FormLabel>
+                    <FormControl>
+                      <Input placeholder="Activity title" {...field} />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+
+              <FormField
+                control={editForm.control}
+                name="description"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Description</FormLabel>
+                    <FormControl>
+                      <Textarea
+                        placeholder="Describe your activity..."
+                        className="min-h-[100px]"
+                        {...field}
+                      />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+
+              <FormField
+                control={editForm.control}
+                name="activityDate"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Activity Date</FormLabel>
+                    <FormControl>
+                      <Input type="date" {...field} />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+
+              <FormField
+                control={editForm.control}
+                name="attachmentUrl"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Attachment URL (Optional)</FormLabel>
+                    <FormControl>
+                      <Input placeholder="https://..." {...field} />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+
+              <div className="flex justify-end gap-3">
+                <Button
+                  type="button"
+                  variant="outline"
+                  onClick={() => setIsEditModalOpen(false)}
+                >
+                  Cancel
+                </Button>
+                <Button
+                  type="submit"
+                  disabled={editMutation.isPending}
+                >
+                  {editMutation.isPending ? "Updating..." : "Update Activity"}
+                </Button>
+              </div>
+            </form>
+          </Form>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }

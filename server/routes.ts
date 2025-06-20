@@ -67,6 +67,40 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Update activity (only pending activities)
+  app.put('/api/activities/:id', isAuthenticated, async (req: any, res: any) => {
+    try {
+      const userId = req.user?.claims.sub;
+      if (!userId) return res.status(401).json({ message: "Unauthorized" });
+
+      const activityId = parseInt(req.params.id);
+      const validatedData = insertActivitySchema.parse({
+        ...req.body,
+        userId,
+      });
+
+      // Check if activity exists and belongs to user
+      const existingActivity = await storage.getActivityById(activityId);
+      if (!existingActivity) {
+        return res.status(404).json({ message: "Activity not found" });
+      }
+
+      if (existingActivity.userId !== userId) {
+        return res.status(403).json({ message: "You can only edit your own activities" });
+      }
+
+      if (existingActivity.status !== 'pending') {
+        return res.status(400).json({ message: "Only pending activities can be edited" });
+      }
+
+      const updatedActivity = await storage.updateActivity(activityId, validatedData);
+      res.json(updatedActivity);
+    } catch (error) {
+      console.error("Error updating activity:", error);
+      res.status(500).json({ message: "Failed to update activity" });
+    }
+  });
+
   // Get user's activities
   app.get('/api/activities/my', isAuthenticated, async (req: any, res: any) => {
     try {
