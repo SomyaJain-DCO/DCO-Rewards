@@ -279,6 +279,7 @@ export class DatabaseStorage implements IStorage {
       monthlyEarnings,
       pendingPoints,
       pendingEarnings,
+      pendingActivities: pendingActivities.length,
       ranking: userRanking || 0,
       totalMembers: totalMembersResult?.count || 0,
     };

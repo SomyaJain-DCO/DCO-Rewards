@@ -90,14 +90,14 @@ export default function Dashboard() {
         />
         <StatsCard
           title="Pending Approval"
-          value={stats?.pendingPoints || 0}
-          subtitle={userRole === 'approver' ? `₹${stats?.pendingEarnings?.toLocaleString() || 0}` : "Awaiting approval"}
+          value={`${stats?.pendingActivities || 0} activities`}
+          subtitle={`${stats?.pendingPoints || 0} points pending`}
           icon={Clock}
           iconColor="text-yellow-600"
           bgColor="bg-yellow-100"
         />
         <StatsCard
-          title="Team Ranking"
+          title="Ranking"
           value={stats?.ranking ? `#${stats.ranking}` : "N/A"}
           subtitle={`of ${stats?.totalMembers || 0} members`}
           icon={Medal}

@@ -144,6 +144,7 @@ export type UserStats = {
   monthlyEarnings: number;
   pendingPoints: number;
   pendingEarnings: number;
+  pendingActivities: number;
   ranking: number;
   totalMembers: number;
 };
