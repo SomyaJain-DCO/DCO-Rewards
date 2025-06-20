@@ -129,6 +129,7 @@ Changelog:
 - June 20, 2025. Integrated official Dhadda & Co. logo throughout application
 - June 20, 2025. Restricted Team Directory access to approvers only
 - June 20, 2025. Enhanced dashboard with clickable user names and improved pending approvals display
+- June 20, 2025. Implemented navy blue color theme matching company logo with proper text contrast
 ```
 
 ## User Preferences

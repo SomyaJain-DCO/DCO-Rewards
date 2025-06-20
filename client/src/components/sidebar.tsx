@@ -133,7 +133,7 @@ export default function Sidebar() {
         </ul>
         
         <div className="px-4 mt-8 mb-2">
-          <span className="text-xs font-semibold text-gray-500 uppercase tracking-wide">
+          <span className="text-xs font-semibold text-primary-foreground/60 uppercase tracking-wide">
             ACCOUNT
           </span>
         </div>
@@ -145,11 +145,11 @@ export default function Sidebar() {
                 <Link href={item.href}>
                   <div
                     className={cn(
-                      "flex items-center px-4 py-3 text-gray-700 rounded-lg hover:bg-gray-50 transition-colors cursor-pointer",
-                      isActive && "bg-blue-50 border-r-2 border-primary text-primary"
+                      "flex items-center px-4 py-3 text-primary-foreground/80 rounded-lg hover:bg-primary-foreground/10 transition-colors cursor-pointer",
+                      isActive && "bg-primary-foreground/20 border-r-2 border-primary-foreground text-primary-foreground"
                     )}
                   >
-                    <item.icon className="mr-3 h-5 w-5 text-gray-400" />
+                    <item.icon className="mr-3 h-5 w-5 text-primary-foreground/60" />
                     {item.name}
                   </div>
                 </Link>
@@ -159,9 +159,9 @@ export default function Sidebar() {
           <li>
             <button
               onClick={handleLogout}
-              className="w-full flex items-center px-4 py-3 text-gray-700 rounded-lg hover:bg-gray-50 transition-colors"
+              className="w-full flex items-center px-4 py-3 text-primary-foreground/80 rounded-lg hover:bg-primary-foreground/10 transition-colors"
             >
-              <LogOut className="mr-3 h-5 w-5 text-gray-400" />
+              <LogOut className="mr-3 h-5 w-5 text-primary-foreground/60" />
               Logout
             </button>
           </li>
