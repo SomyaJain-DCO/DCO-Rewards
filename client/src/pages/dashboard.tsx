@@ -97,9 +97,9 @@ export default function Dashboard() {
         {userRole === 'approver' ? (
           <>
             <StatsCard
-              title="Total Team Points"
+              title="Total Points Awarded"
               value={teamSummary?.totalTeamPoints || 0}
-              subtitle="Points awarded to team"
+              subtitle="Points awarded so far"
               icon={Trophy}
               iconColor="text-primary"
               bgColor="bg-blue-100"
@@ -109,7 +109,7 @@ export default function Dashboard() {
             <StatsCard
               title="This Month"
               value={teamSummary?.monthlyTeamPoints || 0}
-              subtitle="Team points this month"
+              subtitle="Total Points awarded this month"
               icon={Calendar}
               iconColor="text-secondary"
               bgColor="bg-green-100"

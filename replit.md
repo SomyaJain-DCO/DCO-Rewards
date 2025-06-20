@@ -159,6 +159,7 @@ Changelog:
 - June 20, 2025. Fixed approval card text display issues by restructuring layout into clear lines, removing monetary values, and eliminating text truncation
 - June 20, 2025. Added comprehensive Encashments page for approvers to review and process point-to-cash conversion requests with approval/rejection workflow
 - June 20, 2025. Completed branding update by replacing remaining "Team Rewards Dashboard" references with "DCo Rewards Dashboard" and removed subtitle
+- June 20, 2025. Implemented role-based dashboard statistics - approvers view team-focused metrics instead of personal stats with updated labels: "Total Points Awarded" and clearer monthly point descriptions
 ```
 
 ## User Preferences
