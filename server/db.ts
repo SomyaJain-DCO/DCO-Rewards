@@ -11,5 +11,33 @@ if (!process.env.DATABASE_URL) {
   );
 }
 
-export const pool = new Pool({ connectionString: process.env.DATABASE_URL });
+// Add connection timeout and retry logic
+const connectionOptions = {
+  connectionString: process.env.DATABASE_URL,
+  connectionTimeoutMillis: 10000,
+  idleTimeoutMillis: 30000,
+  max: 10
+};
+
+export const pool = new Pool(connectionOptions);
 export const db = drizzle({ client: pool, schema });
+
+// Test connection on startup
+export async function testDatabaseConnection() {
+  try {
+    console.log("Testing database connection...");
+    // Use a timeout to prevent hanging
+    const timeoutPromise = new Promise((_, reject) => 
+      setTimeout(() => reject(new Error('Database connection timeout')), 5000)
+    );
+    
+    const queryPromise = pool.query('SELECT 1 as test');
+    await Promise.race([queryPromise, timeoutPromise]);
+    
+    console.log("Database connection successful");
+    return true;
+  } catch (error) {
+    console.error("Database connection failed:", error.message || error);
+    return false;
+  }
+}
