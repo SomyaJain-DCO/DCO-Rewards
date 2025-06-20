@@ -41,8 +41,17 @@ export default function Sidebar() {
   return (
     <aside className="w-64 bg-white shadow-lg fixed h-full z-10">
       <div className="p-6 border-b border-gray-200">
-        <h2 className="text-xl font-bold text-gray-800">Dhadda & Co.</h2>
-        <p className="text-sm text-gray-600">Chartered Accountants</p>
+        <div className="flex items-center space-x-3">
+          <img 
+            src="/dco-logo.png" 
+            alt="Dhadda & Co. Logo" 
+            className="h-12 w-auto object-contain"
+          />
+          <div>
+            <h2 className="text-xl font-bold text-gray-800">Dhadda & Co.</h2>
+            <p className="text-sm text-gray-600">Chartered Accountants</p>
+          </div>
+        </div>
       </div>
       
       <nav className="mt-6">

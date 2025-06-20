@@ -125,6 +125,10 @@ This is a full-stack web application for Dhadda & Co. Chartered Accountants desi
 ```
 Changelog:
 - June 20, 2025. Initial setup
+- June 20, 2025. Added comprehensive role-based access control
+- June 20, 2025. Integrated official Dhadda & Co. logo throughout application
+- June 20, 2025. Restricted Team Directory access to approvers only
+- June 20, 2025. Enhanced dashboard with clickable user names and improved pending approvals display
 ```
 
 ## User Preferences
