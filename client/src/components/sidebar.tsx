@@ -27,6 +27,7 @@ const accountNavigation = [
 export default function Sidebar() {
   const [location] = useLocation();
   const { user } = useAuth();
+  const userRole = (user as any)?.role;
 
   const handleLogout = () => {
     window.location.href = "/api/logout";
@@ -51,9 +52,9 @@ export default function Sidebar() {
             return (
               <li key={item.name}>
                 <Link href={item.href}>
-                  <a
+                  <div
                     className={cn(
-                      "flex items-center px-4 py-3 text-gray-700 rounded-lg hover:bg-gray-50 transition-colors",
+                      "flex items-center px-4 py-3 text-gray-700 rounded-lg hover:bg-gray-50 transition-colors cursor-pointer",
                       isActive && "bg-blue-50 border-r-2 border-primary text-primary"
                     )}
                   >
@@ -64,20 +65,20 @@ export default function Sidebar() {
                       )} 
                     />
                     {item.name}
-                  </a>
+                  </div>
                 </Link>
               </li>
             );
           })}
           
-          {user?.role === "approver" && approverNavigation.map((item) => {
+          {userRole === "approver" && approverNavigation.map((item) => {
             const isActive = location === item.href;
             return (
               <li key={item.name}>
                 <Link href={item.href}>
-                  <a
+                  <div
                     className={cn(
-                      "flex items-center px-4 py-3 text-gray-700 rounded-lg hover:bg-gray-50 transition-colors",
+                      "flex items-center px-4 py-3 text-gray-700 rounded-lg hover:bg-gray-50 transition-colors cursor-pointer",
                       isActive && "bg-blue-50 border-r-2 border-primary text-primary"
                     )}
                   >
@@ -88,7 +89,7 @@ export default function Sidebar() {
                       )} 
                     />
                     {item.name}
-                  </a>
+                  </div>
                 </Link>
               </li>
             );
@@ -106,15 +107,15 @@ export default function Sidebar() {
             return (
               <li key={item.name}>
                 <Link href={item.href}>
-                  <a
+                  <div
                     className={cn(
-                      "flex items-center px-4 py-3 text-gray-700 rounded-lg hover:bg-gray-50 transition-colors",
+                      "flex items-center px-4 py-3 text-gray-700 rounded-lg hover:bg-gray-50 transition-colors cursor-pointer",
                       isActive && "bg-blue-50 border-r-2 border-primary text-primary"
                     )}
                   >
                     <item.icon className="mr-3 h-5 w-5 text-gray-400" />
                     {item.name}
-                  </a>
+                  </div>
                 </Link>
               </li>
             );

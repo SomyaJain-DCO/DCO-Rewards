@@ -153,7 +153,7 @@ export class DatabaseStorage implements IStorage {
   }
 
   async getPendingActivities(): Promise<ActivityWithDetails[]> {
-    return await db
+    const results = await db
       .select({
         id: activities.id,
         userId: activities.userId,
@@ -187,13 +187,17 @@ export class DatabaseStorage implements IStorage {
           monetaryValue: activityCategories.monetaryValue,
           description: activityCategories.description,
         },
-        approver: null,
       })
       .from(activities)
       .innerJoin(users, eq(activities.userId, users.id))
       .innerJoin(activityCategories, eq(activities.categoryId, activityCategories.id))
       .where(eq(activities.status, "pending"))
-      .orderBy(desc(activities.createdAt)) as ActivityWithDetails[];
+      .orderBy(desc(activities.createdAt));
+    
+    return results.map(row => ({
+      ...row,
+      approver: undefined
+    })) as ActivityWithDetails[];
   }
 
   async approveActivity(approval: ApproveActivity, approverId: string): Promise<Activity> {

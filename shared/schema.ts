@@ -106,6 +106,8 @@ export const insertActivitySchema = createInsertSchema(activities).omit({
   rejectionReason: true,
   createdAt: true,
   updatedAt: true,
+}).extend({
+  activityDate: z.coerce.date(),
 });
 
 export const insertActivityCategorySchema = createInsertSchema(activityCategories).omit({

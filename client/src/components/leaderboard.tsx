@@ -137,12 +137,14 @@ export default function Leaderboard({ data, currentUserId, isLoading }: Leaderbo
                       </span>
                     </div>
                     <div>
-                      <p className="font-medium text-gray-800">
-                        {getDisplayName(user)}
+                      <div className="flex items-center space-x-2">
+                        <p className="font-medium text-gray-800">
+                          {getDisplayName(user)}
+                        </p>
                         {isCurrentUser && (
-                          <Badge className="ml-2 bg-primary text-white">You</Badge>
+                          <Badge className="bg-primary text-white">You</Badge>
                         )}
-                      </p>
+                      </div>
                       <p className="text-sm text-gray-600">
                         {user.designation || "Team Member"}
                       </p>

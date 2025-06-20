@@ -1,9 +1,8 @@
-import type { Express } from "express";
+import type { Express, Request, Response } from "express";
 import { createServer, type Server } from "http";
 import { storage } from "./storage";
 import { setupAuth, isAuthenticated } from "./replitAuth";
 import { insertActivitySchema, approveActivitySchema } from "@shared/schema";
-import { Request } from "express";
 
 interface AuthenticatedRequest extends Request {
   user?: {
@@ -25,7 +24,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   await storage.seedActivityCategories();
 
   // Auth routes
-  app.get('/api/auth/user', isAuthenticated, async (req: AuthenticatedRequest, res) => {
+  app.get('/api/auth/user', isAuthenticated, async (req: any, res: any) => {
     try {
       const userId = req.user?.claims.sub;
       if (!userId) return res.status(401).json({ message: "Unauthorized" });
@@ -39,7 +38,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   });
 
   // Activity categories
-  app.get('/api/activity-categories', isAuthenticated, async (req, res) => {
+  app.get('/api/activity-categories', isAuthenticated, async (req: any, res: any) => {
     try {
       const categories = await storage.getActivityCategories();
       res.json(categories);
@@ -50,7 +49,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   });
 
   // Submit activity
-  app.post('/api/activities', isAuthenticated, async (req: AuthenticatedRequest, res) => {
+  app.post('/api/activities', isAuthenticated, async (req: any, res: any) => {
     try {
       const userId = req.user?.claims.sub;
       if (!userId) return res.status(401).json({ message: "Unauthorized" });
@@ -69,7 +68,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   });
 
   // Get user's activities
-  app.get('/api/activities/my', isAuthenticated, async (req: AuthenticatedRequest, res) => {
+  app.get('/api/activities/my', isAuthenticated, async (req: any, res: any) => {
     try {
       const userId = req.user?.claims.sub;
       if (!userId) return res.status(401).json({ message: "Unauthorized" });
@@ -83,7 +82,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   });
 
   // Get pending activities (for approvers)
-  app.get('/api/activities/pending', isAuthenticated, async (req: AuthenticatedRequest, res) => {
+  app.get('/api/activities/pending', isAuthenticated, async (req: any, res: any) => {
     try {
       const userId = req.user?.claims.sub;
       if (!userId) return res.status(401).json({ message: "Unauthorized" });
@@ -102,7 +101,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   });
 
   // Approve/reject activity
-  app.post('/api/activities/approve', isAuthenticated, async (req: AuthenticatedRequest, res) => {
+  app.post('/api/activities/approve', isAuthenticated, async (req: any, res: any) => {
     try {
       const userId = req.user?.claims.sub;
       if (!userId) return res.status(401).json({ message: "Unauthorized" });
@@ -122,7 +121,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   });
 
   // Get user stats
-  app.get('/api/stats', isAuthenticated, async (req: AuthenticatedRequest, res) => {
+  app.get('/api/stats', isAuthenticated, async (req: any, res: any) => {
     try {
       const userId = req.user?.claims.sub;
       if (!userId) return res.status(401).json({ message: "Unauthorized" });
@@ -136,7 +135,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   });
 
   // Get leaderboard
-  app.get('/api/leaderboard', isAuthenticated, async (req, res) => {
+  app.get('/api/leaderboard', isAuthenticated, async (req: any, res: any) => {
     try {
       const leaderboard = await storage.getLeaderboard();
       res.json(leaderboard);
@@ -147,7 +146,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   });
 
   // Get recent activities
-  app.get('/api/activities/recent', isAuthenticated, async (req, res) => {
+  app.get('/api/activities/recent', isAuthenticated, async (req: any, res: any) => {
     try {
       const limit = parseInt(req.query.limit as string) || 10;
       const activities = await storage.getRecentActivities(limit);

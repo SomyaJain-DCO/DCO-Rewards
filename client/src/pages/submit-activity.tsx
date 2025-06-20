@@ -50,7 +50,7 @@ export default function SubmitActivity() {
     mutationFn: async (data: FormData) => {
       return await apiRequest("POST", "/api/activities", {
         ...data,
-        activityDate: new Date(data.activityDate).toISOString(),
+        activityDate: data.activityDate,
       });
     },
     onSuccess: () => {
@@ -97,9 +97,11 @@ export default function SubmitActivity() {
   }, [isAuthenticated, isLoading, toast]);
 
   const handleCategoryChange = (categoryId: string) => {
-    const category = categories?.find((cat: any) => cat.id === parseInt(categoryId));
-    setSelectedCategory(category);
-    form.setValue("categoryId", parseInt(categoryId));
+    if (categories && Array.isArray(categories)) {
+      const category = categories.find((cat: any) => cat.id === parseInt(categoryId));
+      setSelectedCategory(category);
+      form.setValue("categoryId", parseInt(categoryId));
+    }
   };
 
   const onSubmit = (data: FormData) => {
@@ -171,7 +173,7 @@ export default function SubmitActivity() {
                           </SelectTrigger>
                         </FormControl>
                         <SelectContent>
-                          {categories?.map((category: any) => (
+                          {categories && Array.isArray(categories) && categories.map((category: any) => (
                             <SelectItem key={category.id} value={category.id.toString()}>
                               {category.name} ({category.points} pts - ₹{category.monetaryValue?.toLocaleString()})
                             </SelectItem>
@@ -259,6 +261,7 @@ export default function SubmitActivity() {
                         <Input
                           placeholder="https://example.com/document.pdf"
                           {...field}
+                          value={field.value || ""}
                         />
                       </FormControl>
                       <FormMessage />
