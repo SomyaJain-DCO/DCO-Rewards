@@ -5,7 +5,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Calendar, User, Award, Clock, Search, Download, X } from "lucide-react";
+import { Calendar, User, Award, Clock, Search, Download, X, ExternalLink } from "lucide-react";
 import { Link } from "wouter";
 import { format } from "date-fns";
 
@@ -244,7 +244,20 @@ export default function AllActivities() {
                           <span className="text-gray-400 mx-2">|</span>
                           <span className="text-gray-600">{activity.description}</span>
                         </p>
-                        {getStatusBadge(activity.status)}
+                        <div className="flex items-center gap-2">
+                          {activity.attachmentUrl && (
+                            <a
+                              href={activity.attachmentUrl}
+                              target="_blank"
+                              rel="noopener noreferrer"
+                              className="text-primary hover:text-primary/80 transition-colors"
+                              title="View submission"
+                            >
+                              <ExternalLink className="w-4 h-4" />
+                            </a>
+                          )}
+                          {getStatusBadge(activity.status)}
+                        </div>
                       </div>
                     </div>
                   </div>

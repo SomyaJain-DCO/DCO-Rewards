@@ -3,7 +3,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Calendar, FileText, User, Trophy, Clock, Search, X } from "lucide-react";
+import { Calendar, FileText, User, Trophy, Clock, Search, X, ExternalLink } from "lucide-react";
 import { useAuth } from "@/hooks/useAuth";
 import { useLocation } from "wouter";
 import { format } from "date-fns";
@@ -229,7 +229,20 @@ export default function MyActivities() {
                         <span className="text-gray-400 mx-2">|</span>
                         <span className="text-gray-600">{activity.description}</span>
                       </p>
-                      {getStatusBadge(activity.status)}
+                      <div className="flex items-center gap-2">
+                        {activity.attachmentUrl && (
+                          <a
+                            href={activity.attachmentUrl}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            className="text-primary hover:text-primary/80 transition-colors"
+                            title="View submission"
+                          >
+                            <ExternalLink className="w-4 h-4" />
+                          </a>
+                        )}
+                        {getStatusBadge(activity.status)}
+                      </div>
                     </div>
                     
                     <div className="flex items-center gap-4 text-xs text-gray-500">
