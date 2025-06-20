@@ -1,19 +1,86 @@
+import { useState } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { useAuth } from "@/hooks/useAuth";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { Calendar, User, Award, Clock } from "lucide-react";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Calendar, User, Award, Clock, Search, Download, X } from "lucide-react";
 import { Link } from "wouter";
 import { format } from "date-fns";
 
 export default function AllActivities() {
   const { user, isAuthenticated } = useAuth();
   const userRole = (user as any)?.role;
+  const [searchTerm, setSearchTerm] = useState("");
 
   const { data: allActivities, isLoading } = useQuery({
     queryKey: ["/api/activities/all"],
     enabled: isAuthenticated,
   });
+
+  // Filter activities based on search term
+  const filteredActivities = allActivities?.filter((activity: any) => {
+    if (!searchTerm) return true;
+    
+    const searchLower = searchTerm.toLowerCase();
+    return (
+      activity.title?.toLowerCase().includes(searchLower) ||
+      activity.description?.toLowerCase().includes(searchLower) ||
+      activity.category?.name?.toLowerCase().includes(searchLower) ||
+      activity.user?.firstName?.toLowerCase().includes(searchLower) ||
+      activity.user?.lastName?.toLowerCase().includes(searchLower) ||
+      activity.user?.email?.toLowerCase().includes(searchLower)
+    );
+  }) || [];
+
+  const exportToCSV = () => {
+    if (!filteredActivities || filteredActivities.length === 0) return;
+    
+    const headers = [
+      'Title',
+      'Description', 
+      'Category',
+      'Points',
+      'Monetary Value',
+      'Status',
+      'User Name',
+      'User Email',
+      'Activity Date',
+      'Submitted Date',
+      'Approved Date',
+      'Approver'
+    ];
+    
+    const csvData = filteredActivities.map((activity: any) => [
+      activity.title || '',
+      activity.description || '',
+      activity.category?.name || '',
+      activity.category?.points || 0,
+      activity.category?.monetaryValue || 0,
+      activity.status || '',
+      `${activity.user?.firstName || ''} ${activity.user?.lastName || ''}`.trim() || activity.user?.email || '',
+      activity.user?.email || '',
+      activity.activityDate ? format(new Date(activity.activityDate), 'yyyy-MM-dd') : '',
+      activity.createdAt ? format(new Date(activity.createdAt), 'yyyy-MM-dd HH:mm') : '',
+      activity.approvedAt ? format(new Date(activity.approvedAt), 'yyyy-MM-dd HH:mm') : '',
+      activity.approver ? `${activity.approver.firstName || ''} ${activity.approver.lastName || ''}`.trim() || activity.approver.email : ''
+    ]);
+    
+    const csvContent = [headers, ...csvData]
+      .map(row => row.map(field => `"${String(field).replace(/"/g, '""')}"`).join(','))
+      .join('\n');
+    
+    const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+    const link = document.createElement('a');
+    const url = URL.createObjectURL(blob);
+    link.setAttribute('href', url);
+    link.setAttribute('download', `all-activities-${format(new Date(), 'yyyy-MM-dd')}.csv`);
+    link.style.visibility = 'hidden';
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+  };
 
   if (isLoading) {
     return (
@@ -87,9 +154,48 @@ export default function AllActivities() {
         <p className="text-gray-600">Complete overview of team contributions</p>
       </div>
 
+      {/* Search and Export Section */}
+      <div className="flex flex-col sm:flex-row gap-4 items-center justify-between">
+        <div className="relative flex-1 max-w-md">
+          <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-4 h-4" />
+          <Input
+            placeholder="Search activities, users, or categories..."
+            value={searchTerm}
+            onChange={(e) => setSearchTerm(e.target.value)}
+            className="pl-10"
+          />
+          {searchTerm && (
+            <Button
+              onClick={() => setSearchTerm("")}
+              variant="ghost"
+              size="sm"
+              className="absolute right-1 top-1/2 transform -translate-y-1/2 h-8 w-8 p-0"
+            >
+              <X className="w-4 h-4" />
+            </Button>
+          )}
+        </div>
+        
+        <div className="flex items-center space-x-2">
+          <span className="text-sm text-gray-600">
+            {filteredActivities.length} of {allActivities?.length || 0} activities
+          </span>
+          <Button
+            onClick={exportToCSV}
+            variant="outline"
+            size="sm"
+            className="flex items-center space-x-2"
+            disabled={filteredActivities.length === 0}
+          >
+            <Download className="w-4 h-4" />
+            <span>Export</span>
+          </Button>
+        </div>
+      </div>
+
       <div className="grid gap-3">
-        {allActivities && allActivities.length > 0 ? (
-          allActivities.map((activity: any) => (
+        {filteredActivities && filteredActivities.length > 0 ? (
+          filteredActivities.map((activity: any) => (
             <Card key={activity.id} className="hover:shadow-md transition-shadow">
               <CardContent className="p-4">
                 <div className="flex items-center justify-between">
