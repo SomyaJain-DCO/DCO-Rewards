@@ -349,6 +349,78 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Get pending encashment requests (approvers only)
+  app.get('/api/encashment/pending', isAuthenticated, async (req: any, res: any) => {
+    try {
+      const userId = req.user?.claims.sub;
+      if (!userId) return res.status(401).json({ message: "Unauthorized" });
+
+      const user = await storage.getUser(userId);
+      if (user?.role !== 'approver') {
+        return res.status(403).json({ message: "Access denied. Only approvers can view pending encashment requests." });
+      }
+
+      const pendingRequests = await storage.getPendingEncashmentRequests();
+      res.json(pendingRequests);
+    } catch (error) {
+      console.error("Error fetching pending encashment requests:", error);
+      res.status(500).json({ message: "Failed to fetch pending encashment requests" });
+    }
+  });
+
+  // Approve encashment request (approvers only)
+  app.post('/api/encashment/approve/:id', isAuthenticated, async (req: any, res: any) => {
+    try {
+      const userId = req.user?.claims.sub;
+      if (!userId) return res.status(401).json({ message: "Unauthorized" });
+
+      const user = await storage.getUser(userId);
+      if (user?.role !== 'approver') {
+        return res.status(403).json({ message: "Access denied. Only approvers can approve encashment requests." });
+      }
+
+      const requestId = parseInt(req.params.id);
+      const validatedData = approveEncashmentRequestSchema.parse({
+        id: requestId,
+        status: "approved",
+        processedAt: new Date().toISOString(),
+      });
+
+      const encashmentRequest = await storage.approveEncashmentRequest(validatedData, userId);
+      res.json(encashmentRequest);
+    } catch (error) {
+      console.error("Error approving encashment request:", error);
+      res.status(500).json({ message: "Failed to approve encashment request" });
+    }
+  });
+
+  // Reject encashment request (approvers only)
+  app.post('/api/encashment/reject/:id', isAuthenticated, async (req: any, res: any) => {
+    try {
+      const userId = req.user?.claims.sub;
+      if (!userId) return res.status(401).json({ message: "Unauthorized" });
+
+      const user = await storage.getUser(userId);
+      if (user?.role !== 'approver') {
+        return res.status(403).json({ message: "Access denied. Only approvers can reject encashment requests." });
+      }
+
+      const requestId = parseInt(req.params.id);
+      const validatedData = approveEncashmentRequestSchema.parse({
+        id: requestId,
+        status: "rejected",
+        rejectionReason: req.body.rejectionReason,
+        processedAt: new Date().toISOString(),
+      });
+
+      const encashmentRequest = await storage.approveEncashmentRequest(validatedData, userId);
+      res.json(encashmentRequest);
+    } catch (error) {
+      console.error("Error rejecting encashment request:", error);
+      res.status(500).json({ message: "Failed to reject encashment request" });
+    }
+  });
+
   // Approve/reject encashment request (approvers only)
   app.put('/api/encashment-requests/:id/approve', isAuthenticated, async (req: any, res: any) => {
     try {
