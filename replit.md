@@ -141,6 +141,7 @@ Changelog:
 - June 20, 2025. Replaced "Recent Team Activities" with "Recent Contributions" showing only 3 items with "View All" link
 - June 20, 2025. Added search functionality to Profile page activity history with keyword, year, and month filters
 - June 20, 2025. Created separate "All Activities" navigation tab showing comprehensive team activity overview in concise visual format
+- June 20, 2025. Removed activity history section from My Profile tab, keeping only user information and performance summary
 ```
 
 ## User Preferences
