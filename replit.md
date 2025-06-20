@@ -133,6 +133,7 @@ Changelog:
 - June 20, 2025. Added collapsible sidebar with mobile hamburger menu and resolved all text contrast issues
 - June 20, 2025. Created clickable stats cards linking to detailed activity lists with filtering and concise card layout
 - June 20, 2025. Fixed header positioning to prevent sidebar from hiding dashboard title text
+- June 20, 2025. Enhanced activity cards to display full descriptions and activity dates when viewing user activities
 ```
 
 ## User Preferences
