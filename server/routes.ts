@@ -367,9 +367,24 @@ export async function registerRoutes(app: Express): Promise<Server> {
       let totalTeamPoints = 0;
       let monthlyTeamPoints = 0;
       let activeContributors = 0;
+      let totalActivities = 0;
+      let monthlyActivities = 0;
       
       const currentMonth = new Date().getMonth();
       const currentYear = new Date().getFullYear();
+      
+      // Get all approved activities for counting
+      const allActivities = await storage.getAllActivities();
+      const approvedActivities = allActivities.filter(activity => activity.status === 'approved');
+      totalActivities = approvedActivities.length;
+      
+      // Count monthly activities
+      monthlyActivities = approvedActivities.filter(activity => {
+        const dateToCheck = activity.approvedAt || activity.createdAt;
+        if (!dateToCheck) return false;
+        const activityDate = new Date(dateToCheck.toString());
+        return activityDate.getMonth() === currentMonth && activityDate.getFullYear() === currentYear;
+      }).length;
       
       for (const teamUser of allUsers) {
         const stats = await storage.getUserStatsById(teamUser.id);
@@ -385,7 +400,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
         totalTeamPoints,
         monthlyTeamPoints,
         activeContributors,
-        totalMembers
+        totalMembers,
+        totalActivities,
+        monthlyActivities
       });
     } catch (error) {
       console.error("Error fetching team summary:", error);
