@@ -98,7 +98,7 @@ export default function Dashboard() {
           <>
             <StatsCard
               title="Total Points Awarded"
-              value={`${teamSummary?.totalActivities || 0} activities`}
+              value={teamSummary?.totalActivities || 0}
               subtitle={`${teamSummary?.totalTeamPoints || 0} points awarded so far`}
               icon={Trophy}
               iconColor="text-primary"
@@ -108,7 +108,7 @@ export default function Dashboard() {
             />
             <StatsCard
               title="This Month"
-              value={`${teamSummary?.monthlyActivities || 0} activities`}
+              value={teamSummary?.monthlyActivities || 0}
               subtitle={`${teamSummary?.monthlyTeamPoints || 0} points awarded this month`}
               icon={Calendar}
               iconColor="text-secondary"
