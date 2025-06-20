@@ -7,7 +7,9 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import ActivityCard from "@/components/activity-card";
 import { User, Calendar, Trophy, DollarSign, Search, X, Edit, Save, XCircle } from "lucide-react";
 import { apiRequest } from "@/lib/queryClient";
@@ -25,6 +27,12 @@ export default function Profile() {
   // Designation editing state
   const [isEditingDesignation, setIsEditingDesignation] = useState(false);
   const [newDesignation, setNewDesignation] = useState("");
+  
+  // Profile edit dialog state
+  const [isEditDialogOpen, setIsEditDialogOpen] = useState(false);
+  const [editFirstName, setEditFirstName] = useState("");
+  const [editLastName, setEditLastName] = useState("");
+  const [editDesignation, setEditDesignation] = useState("");
 
   // Function to get role based on designation
   const getRoleFromDesignation = (designation: string): string => {
@@ -249,7 +257,7 @@ export default function Profile() {
 
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
         {/* User Info */}
-        <Card>
+        <Card className="relative">
           <CardHeader>
             <CardTitle>Profile Information</CardTitle>
           </CardHeader>
@@ -262,13 +270,8 @@ export default function Profile() {
                 </span>
               </div>
 
-              {/* Name */}
+              {/* Email Only */}
               <div>
-                <h3 className="text-lg font-semibold text-gray-900">
-                  {(user as any)?.firstName && (user as any)?.lastName 
-                    ? `${(user as any).firstName} ${(user as any).lastName}`
-                    : (user as any)?.firstName || (user as any)?.lastName || "User"}
-                </h3>
                 <p className="text-sm text-gray-600">
                   {(user as any)?.email}
                 </p>
@@ -276,14 +279,6 @@ export default function Profile() {
 
               {/* User Details */}
               <div className="space-y-2 text-sm">
-                <div className="flex items-center justify-center space-x-2">
-                  <User className="w-4 h-4 text-gray-500" />
-                  <span className="text-gray-700">
-                    {(user as any)?.firstName && (user as any)?.lastName 
-                      ? `${(user as any).firstName} ${(user as any).lastName}`
-                      : "Team Member"}
-                  </span>
-                </div>
                 
                 <div className="flex items-center justify-center gap-2">
                   {isEditingDesignation ? (
@@ -369,6 +364,88 @@ export default function Profile() {
               </div>
             </div>
           </CardContent>
+          
+          {/* Edit Icon in Lower Right Corner */}
+          <Dialog open={isEditDialogOpen} onOpenChange={setIsEditDialogOpen}>
+            <DialogTrigger asChild>
+              <Button
+                variant="ghost"
+                size="sm"
+                className="absolute bottom-3 right-3 h-8 w-8 p-0 hover:bg-gray-100 rounded-full"
+                onClick={() => {
+                  setEditFirstName((user as any)?.firstName || "");
+                  setEditLastName((user as any)?.lastName || "");
+                  setEditDesignation((user as any)?.designation || "");
+                }}
+              >
+                <Edit className="h-4 w-4" />
+              </Button>
+            </DialogTrigger>
+            <DialogContent className="sm:max-w-[425px]">
+              <DialogHeader>
+                <DialogTitle>Edit Profile Information</DialogTitle>
+                <DialogDescription>
+                  Update your name and designation. Changes require approval from Senior Manager or Partner.
+                </DialogDescription>
+              </DialogHeader>
+              <div className="grid gap-4 py-4">
+                <div className="grid grid-cols-4 items-center gap-4">
+                  <Label htmlFor="firstName" className="text-right">
+                    First Name
+                  </Label>
+                  <Input
+                    id="firstName"
+                    value={editFirstName}
+                    onChange={(e) => setEditFirstName(e.target.value)}
+                    className="col-span-3"
+                  />
+                </div>
+                <div className="grid grid-cols-4 items-center gap-4">
+                  <Label htmlFor="lastName" className="text-right">
+                    Last Name
+                  </Label>
+                  <Input
+                    id="lastName"
+                    value={editLastName}
+                    onChange={(e) => setEditLastName(e.target.value)}
+                    className="col-span-3"
+                  />
+                </div>
+                <div className="grid grid-cols-4 items-center gap-4">
+                  <Label htmlFor="designation" className="text-right">
+                    Designation
+                  </Label>
+                  <Select value={editDesignation} onValueChange={setEditDesignation}>
+                    <SelectTrigger className="col-span-3">
+                      <SelectValue placeholder="Select designation" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="Partner">Partner</SelectItem>
+                      <SelectItem value="Senior Manager">Senior Manager</SelectItem>
+                      <SelectItem value="Manager">Manager</SelectItem>
+                      <SelectItem value="Associate">Associate</SelectItem>
+                      <SelectItem value="Senior Consultant">Senior Consultant</SelectItem>
+                      <SelectItem value="Analyst">Analyst</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
+              </div>
+              <DialogFooter>
+                <Button
+                  type="submit"
+                  onClick={() => {
+                    toast({
+                      title: "Request Submitted",
+                      description: "Your profile update request has been submitted for approval by Senior Manager or Partner.",
+                    });
+                    setIsEditDialogOpen(false);
+                  }}
+                >
+                  Submit for Approval
+                </Button>
+              </DialogFooter>
+            </DialogContent>
+          </Dialog>
         </Card>
 
         {/* Performance Summary */}
