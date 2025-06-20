@@ -93,84 +93,66 @@ export default function MyActivities() {
           </CardContent>
         </Card>
       ) : (
-        <div className="grid gap-6">
+        <div className="space-y-4">
           {filteredActivities.map((activity: any) => (
-            <Card key={activity.id} className="hover:shadow-md transition-shadow">
-              <CardHeader className="pb-3">
+            <Card key={activity.id} className="hover:shadow-sm transition-shadow">
+              <CardContent className="p-4">
                 <div className="flex items-start justify-between">
-                  <div className="space-y-1">
-                    <CardTitle className="text-lg">{activity.title}</CardTitle>
-                    <div className="flex items-center gap-4 text-sm text-gray-600">
+                  <div className="flex-1 min-w-0">
+                    <div className="flex items-center gap-3 mb-2">
+                      <h3 className="font-semibold text-gray-900 truncate">{activity.title}</h3>
+                      {getStatusBadge(activity.status)}
+                    </div>
+                    
+                    <p className="text-gray-700 text-sm mb-3 line-clamp-2">
+                      {activity.description}
+                    </p>
+                    
+                    <div className="flex items-center gap-4 text-xs text-gray-500">
                       <div className="flex items-center gap-1">
-                        <Calendar className="h-4 w-4" />
+                        <Calendar className="h-3 w-3" />
                         {format(new Date(activity.activityDate), "MMM dd, yyyy")}
                       </div>
                       <div className="flex items-center gap-1">
-                        <Trophy className="h-4 w-4" />
+                        <Trophy className="h-3 w-3" />
                         {activity.category.name}
                       </div>
-                    </div>
-                  </div>
-                  <div className="flex flex-col items-end gap-2">
-                    {getStatusBadge(activity.status)}
-                    <div className="text-right">
-                      <div className="font-semibold text-primary">
-                        {activity.category.points} points
-                      </div>
-                      {userRole === "approver" && activity.category.monetaryValue && (
-                        <div className="text-sm text-gray-600">
-                          ₹{activity.category.monetaryValue.toLocaleString()}
-                        </div>
+                      {activity.attachmentUrl && (
+                        <a
+                          href={activity.attachmentUrl}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          className="text-primary hover:underline flex items-center gap-1"
+                        >
+                          <FileText className="h-3 w-3" />
+                          Attachment
+                        </a>
                       )}
                     </div>
                   </div>
-                </div>
-              </CardHeader>
-              
-              <CardContent className="pt-0">
-                <div className="space-y-4">
-                  <div>
-                    <h4 className="font-medium mb-2">Description</h4>
-                    <p className="text-gray-700 leading-relaxed">
-                      {activity.description}
-                    </p>
-                  </div>
-
-                  {activity.attachmentUrl && (
-                    <div>
-                      <h4 className="font-medium mb-2">Attachment</h4>
-                      <a
-                        href={activity.attachmentUrl}
-                        target="_blank"
-                        rel="noopener noreferrer"
-                        className="text-primary hover:underline flex items-center gap-1"
-                      >
-                        <FileText className="h-4 w-4" />
-                        View attachment
-                      </a>
+                  
+                  <div className="text-right ml-4">
+                    <div className="font-semibold text-primary">
+                      {activity.category.points} pts
                     </div>
-                  )}
-
-                  <div className="flex items-center justify-between text-sm text-gray-500 pt-2 border-t">
-                    <div className="flex items-center gap-1">
-                      <Clock className="h-4 w-4" />
-                      Submitted {format(new Date(activity.createdAt), "MMM dd, yyyy 'at' h:mm a")}
-                    </div>
-                    
-                    {activity.status === "approved" && activity.approvedAt && (
-                      <div className="flex items-center gap-1">
-                        <User className="h-4 w-4" />
-                        Approved {format(new Date(activity.approvedAt), "MMM dd, yyyy")}
+                    {userRole === "approver" && activity.category.monetaryValue && (
+                      <div className="text-sm text-gray-600">
+                        ₹{activity.category.monetaryValue.toLocaleString()}
                       </div>
                     )}
-
-                    {activity.status === "rejected" && activity.rejectionReason && (
-                      <div className="text-red-600">
-                        Rejected: {activity.rejectionReason}
-                      </div>
-                    )}
+                    <div className="text-xs text-gray-500 mt-1">
+                      {format(new Date(activity.createdAt), "MMM dd")}
+                    </div>
                   </div>
                 </div>
+
+                {activity.status === "rejected" && activity.rejectionReason && (
+                  <div className="mt-3 pt-3 border-t border-red-100">
+                    <div className="text-sm text-red-600">
+                      <strong>Rejection reason:</strong> {activity.rejectionReason}
+                    </div>
+                  </div>
+                )}
               </CardContent>
             </Card>
           ))}
