@@ -18,11 +18,13 @@ import Encashment from "@/pages/encashment";
 import Encashments from "@/pages/encashments";
 import Admin from "@/pages/admin";
 import CompleteProfile from "@/pages/complete-profile";
+import UserApprovals from "@/pages/user-approvals";
+import PendingApproval from "@/pages/pending-approval";
 import Sidebar from "@/components/sidebar";
 import Header from "@/components/header";
 
 function Router() {
-  const { isAuthenticated, isLoading, user } = useAuth();
+  const { isAuthenticated, isLoading, user, isPendingApproval } = useAuth();
 
   if (isLoading) {
     return (
@@ -30,6 +32,11 @@ function Router() {
         <div className="animate-spin rounded-full h-32 w-32 border-b-2 border-primary"></div>
       </div>
     );
+  }
+
+  // Show pending approval page if user is pending approval
+  if (isPendingApproval) {
+    return <PendingApproval />;
   }
 
   if (!isAuthenticated) {
@@ -64,6 +71,7 @@ function Router() {
             <Route path="/all-activities" component={AllActivities} />
             <Route path="/encashment" component={Encashment} />
             <Route path="/encashments" component={Encashments} />
+            <Route path="/user-approvals" component={UserApprovals} />
             <Route path="/admin" component={Admin} />
             <Route path="/user/:userId" component={({ params }) => <UserActivities userId={params?.userId || ""} />} />
             <Route component={NotFound} />

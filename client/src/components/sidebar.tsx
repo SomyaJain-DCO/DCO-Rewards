@@ -31,6 +31,7 @@ export default function Sidebar() {
         { name: "Dashboard", href: "/", icon: LayoutDashboard },
         { name: "All Activities", href: "/all-activities", icon: FileText },
         { name: "Approvals", href: "/approvals", icon: CheckSquare },
+        { name: "User Approvals", href: "/user-approvals", icon: Users },
         { name: "Encashments", href: "/encashments", icon: Banknote },
         { name: "Team Directory", href: "/team", icon: Users },
         { name: "Admin", href: "/admin", icon: Shield },

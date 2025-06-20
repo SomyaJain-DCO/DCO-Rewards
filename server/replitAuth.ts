@@ -136,6 +136,15 @@ export const isAuthenticated: RequestHandler = async (req, res, next) => {
 
   const now = Math.floor(Date.now() / 1000);
   if (now <= user.expires_at) {
+    // Check if user is approved in database
+    const dbUser = await storage.getUser(user.claims.sub);
+    if (!dbUser || dbUser.status !== "approved") {
+      return res.status(403).json({ 
+        message: "Account pending approval", 
+        status: dbUser?.status || "pending",
+        rejectionReason: dbUser?.rejectionReason 
+      });
+    }
     return next();
   }
 
@@ -149,6 +158,17 @@ export const isAuthenticated: RequestHandler = async (req, res, next) => {
     const config = await getOidcConfig();
     const tokenResponse = await client.refreshTokenGrant(config, refreshToken);
     updateUserSession(user, tokenResponse);
+    
+    // Check if user is approved in database after token refresh
+    const dbUser = await storage.getUser(user.claims.sub);
+    if (!dbUser || dbUser.status !== "approved") {
+      return res.status(403).json({ 
+        message: "Account pending approval", 
+        status: dbUser?.status || "pending",
+        rejectionReason: dbUser?.rejectionReason 
+      });
+    }
+    
     return next();
   } catch (error) {
     res.status(401).json({ message: "Unauthorized" });

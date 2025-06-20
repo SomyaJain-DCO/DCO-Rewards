@@ -198,6 +198,71 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Get pending user registrations (Senior Managers and Partners only)
+  app.get('/api/users/pending', isAuthenticated, async (req: any, res: any) => {
+    try {
+      const userId = req.user?.claims.sub;
+      if (!userId) return res.status(401).json({ message: "Unauthorized" });
+
+      const user = await storage.getUser(userId);
+      if (!user || (user.designation !== 'Senior Manager' && user.designation !== 'Partner')) {
+        return res.status(403).json({ message: "Access denied. Only Senior Managers and Partners can view pending user registrations." });
+      }
+
+      const pendingUsers = await storage.getPendingUsers();
+      res.json(pendingUsers);
+    } catch (error) {
+      console.error("Error fetching pending users:", error);
+      res.status(500).json({ message: "Failed to fetch pending users" });
+    }
+  });
+
+  // Approve user registration (Senior Managers and Partners only)
+  app.put('/api/users/:id/approve', isAuthenticated, async (req: any, res: any) => {
+    try {
+      const userId = req.user?.claims.sub;
+      if (!userId) return res.status(401).json({ message: "Unauthorized" });
+
+      const user = await storage.getUser(userId);
+      if (!user || (user.designation !== 'Senior Manager' && user.designation !== 'Partner')) {
+        return res.status(403).json({ message: "Access denied. Only Senior Managers and Partners can approve user registrations." });
+      }
+
+      const targetUserId = req.params.id;
+      const approvedUser = await storage.approveUser(targetUserId, userId);
+      res.json(approvedUser);
+    } catch (error) {
+      console.error("Error approving user:", error);
+      res.status(500).json({ message: "Failed to approve user" });
+    }
+  });
+
+  // Reject user registration (Senior Managers and Partners only)
+  app.put('/api/users/:id/reject', isAuthenticated, async (req: any, res: any) => {
+    try {
+      const userId = req.user?.claims.sub;
+      if (!userId) return res.status(401).json({ message: "Unauthorized" });
+
+      const user = await storage.getUser(userId);
+      if (!user || (user.designation !== 'Senior Manager' && user.designation !== 'Partner')) {
+        return res.status(403).json({ message: "Access denied. Only Senior Managers and Partners can reject user registrations." });
+      }
+
+      const targetUserId = req.params.id;
+      const { rejectionReason } = req.body;
+
+      if (!rejectionReason?.trim()) {
+        return res.status(400).json({ message: "Rejection reason is required" });
+      }
+
+      const rejectedUser = await storage.rejectUser(targetUserId, userId, rejectionReason.trim());
+      res.json(rejectedUser);
+    } catch (error) {
+      console.error("Error rejecting user:", error);
+      res.status(500).json({ message: "Failed to reject user" });
+    }
+  });
+
   // Activity categories
   app.get('/api/activity-categories', isAuthenticated, async (req: any, res: any) => {
     try {

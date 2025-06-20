@@ -35,6 +35,11 @@ export interface IStorage {
   updateUserDesignationAndRole(id: string, designation: string, role: string): Promise<User>;
   updateUserProfile(id: string, profile: { firstName: string; lastName: string; designation: string; role: string }): Promise<User>;
   
+  // User approval operations
+  getPendingUsers(): Promise<User[]>;
+  approveUser(userId: string, approverId: string): Promise<User>;
+  rejectUser(userId: string, approverId: string, rejectionReason: string): Promise<User>;
+  
   // Activity category operations
   getActivityCategories(): Promise<ActivityCategory[]>;
   seedActivityCategories(): Promise<void>;
@@ -888,6 +893,43 @@ export class DatabaseStorage implements IStorage {
     }
 
     return approvedRequest;
+  }
+
+  async getPendingUsers(): Promise<User[]> {
+    return await db
+      .select()
+      .from(users)
+      .where(eq(users.status, "pending"))
+      .orderBy(desc(users.createdAt));
+  }
+
+  async approveUser(userId: string, approverId: string): Promise<User> {
+    const [approvedUser] = await db
+      .update(users)
+      .set({
+        status: "approved",
+        approvedBy: approverId,
+        approvedAt: new Date(),
+        updatedAt: new Date(),
+      })
+      .where(eq(users.id, userId))
+      .returning();
+    return approvedUser;
+  }
+
+  async rejectUser(userId: string, approverId: string, rejectionReason: string): Promise<User> {
+    const [rejectedUser] = await db
+      .update(users)
+      .set({
+        status: "rejected",
+        approvedBy: approverId,
+        approvedAt: new Date(),
+        rejectionReason: rejectionReason,
+        updatedAt: new Date(),
+      })
+      .where(eq(users.id, userId))
+      .returning();
+    return rejectedUser;
   }
 }
 

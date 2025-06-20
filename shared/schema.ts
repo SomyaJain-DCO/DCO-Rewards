@@ -36,6 +36,10 @@ export const users = pgTable("users", {
   role: varchar("role").notNull().default("contributor"), // contributor or approver
   designation: varchar("designation"),
   department: varchar("department"),
+  status: varchar("status").notNull().default("pending"), // pending, approved, rejected
+  approvedBy: varchar("approved_by").references(() => users.id),
+  approvedAt: timestamp("approved_at"),
+  rejectionReason: text("rejection_reason"),
   createdAt: timestamp("created_at").defaultNow(),
   updatedAt: timestamp("updated_at").defaultNow(),
 });
@@ -100,13 +104,19 @@ export const profileChangeRequests = pgTable("profile_change_requests", {
 });
 
 // Relations
-export const usersRelations = relations(users, ({ many }) => ({
+export const usersRelations = relations(users, ({ many, one }) => ({
   activities: many(activities),
   approvedActivities: many(activities, { relationName: "approver" }),
   encashmentRequests: many(encashmentRequests),
   approvedEncashmentRequests: many(encashmentRequests, { relationName: "encashmentApprover" }),
   profileChangeRequests: many(profileChangeRequests),
   approvedProfileChangeRequests: many(profileChangeRequests, { relationName: "profileChangeApprover" }),
+  approvedUsers: many(users, { relationName: "userApprover" }),
+  approver: one(users, {
+    fields: [users.approvedBy],
+    references: [users.id],
+    relationName: "userApprover",
+  }),
 }));
 
 export const activitiesRelations = relations(activities, ({ one }) => ({
