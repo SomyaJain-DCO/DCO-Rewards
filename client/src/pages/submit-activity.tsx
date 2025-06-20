@@ -52,7 +52,7 @@ export default function SubmitActivity() {
 
   const mutation = useMutation({
     mutationFn: async (data: FormData) => {
-      return await apiRequest("POST", "/api/activities", {
+      return await apiRequest("/api/activities", "POST", {
         ...data,
         activityDate: data.activityDate,
       });
@@ -67,7 +67,8 @@ export default function SubmitActivity() {
       queryClient.invalidateQueries({ queryKey: ["/api/activities/my"] });
       queryClient.invalidateQueries({ queryKey: ["/api/stats"] });
     },
-    onError: (error) => {
+    onError: (error: any) => {
+      console.error("Activity submission error:", error);
       if (isUnauthorizedError(error)) {
         toast({
           title: "Unauthorized",
@@ -81,7 +82,7 @@ export default function SubmitActivity() {
       }
       toast({
         title: "Error",
-        description: "Failed to submit activity. Please try again.",
+        description: error.message || "Failed to submit activity. Please try again.",
         variant: "destructive",
       });
     },
@@ -108,8 +109,18 @@ export default function SubmitActivity() {
     }
   };
 
-  const onSubmit = (data: FormData) => {
-    mutation.mutate(data);
+  const onSubmit = async (data: FormData) => {
+    try {
+      console.log("Submitting activity data:", data);
+      mutation.mutate(data);
+    } catch (error) {
+      console.error("Form submission error:", error);
+      toast({
+        title: "Error",
+        description: "Failed to submit form. Please check your inputs and try again.",
+        variant: "destructive",
+      });
+    }
   };
 
   if (isLoading || categoriesLoading) {
