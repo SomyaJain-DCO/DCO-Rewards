@@ -10,6 +10,7 @@ import Dashboard from "@/pages/dashboard";
 import SubmitActivity from "@/pages/submit-activity";
 import Profile from "@/pages/profile";
 import Approvals from "@/pages/approvals";
+import Team from "@/pages/team";
 import Sidebar from "@/components/sidebar";
 import Header from "@/components/header";
 
@@ -38,6 +39,7 @@ function Router() {
                 <Switch>
                   <Route path="/" component={Dashboard} />
                   <Route path="/submit-activity" component={SubmitActivity} />
+                  <Route path="/team" component={Team} />
                   <Route path="/profile" component={Profile} />
                   <Route path="/approvals" component={Approvals} />
                   <Route component={NotFound} />

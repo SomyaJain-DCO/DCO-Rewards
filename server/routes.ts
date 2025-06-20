@@ -157,6 +157,17 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Get team members
+  app.get('/api/team', isAuthenticated, async (req: any, res: any) => {
+    try {
+      const team = await storage.getAllUsers();
+      res.json(team);
+    } catch (error) {
+      console.error("Error fetching team members:", error);
+      res.status(500).json({ message: "Failed to fetch team members" });
+    }
+  });
+
   const httpServer = createServer(app);
   return httpServer;
 }

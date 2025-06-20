@@ -5,6 +5,7 @@ import {
   LayoutDashboard, 
   Plus, 
   User, 
+  Users,
   CheckSquare, 
   Settings, 
   LogOut 
@@ -13,6 +14,7 @@ import {
 const navigation = [
   { name: "Dashboard", href: "/", icon: LayoutDashboard },
   { name: "Submit Activity", href: "/submit-activity", icon: Plus },
+  { name: "Team Directory", href: "/team", icon: Users },
   { name: "My Profile", href: "/profile", icon: User },
 ];
 

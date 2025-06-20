@@ -36,6 +36,9 @@ export interface IStorage {
   getUserStats(userId: string): Promise<UserStats>;
   getLeaderboard(): Promise<Array<User & { totalPoints: number; totalEarnings: number }>>;
   getRecentActivities(limit?: number): Promise<ActivityWithDetails[]>;
+  
+  // Team operations
+  getAllUsers(): Promise<User[]>;
 }
 
 export class DatabaseStorage implements IStorage {
@@ -358,6 +361,10 @@ export class DatabaseStorage implements IStorage {
       .where(eq(activities.status, "approved"))
       .orderBy(desc(activities.approvedAt))
       .limit(limit) as ActivityWithDetails[];
+  }
+
+  async getAllUsers(): Promise<User[]> {
+    return await db.select().from(users).orderBy(users.firstName, users.lastName);
   }
 }
 
