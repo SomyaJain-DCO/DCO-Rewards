@@ -166,6 +166,8 @@ Changelog:
 - June 20, 2025. Added comprehensive admin panel with sample data cleanup functionality to remove automatically generated users like Amit Kumar and Vikram Gupta, including their activities and data
 - June 20, 2025. Enhanced My Profile page with editable designation dropdown featuring 15+ CA firm roles (Junior Associate to Partner) and added Profile Type display showing Contributor/Approver status with role-based descriptions
 - June 20, 2025. Updated designation dropdown to 6 specific CA firm roles with automatic role assignment: Partner → Approver, Senior Manager/Manager/Associate/Senior Consultant/Analyst → Contributor, and fixed API request parameter order bug
+- June 20, 2025. Implemented comprehensive profile change request approval workflow with floating edit button, database schema, backend API, and role-based approval system requiring Senior Manager/Partner authorization
+- June 20, 2025. Removed Account section, Settings, and Logout options from sidebar hamburger menu for cleaner navigation interface
 ```
 
 ## User Preferences

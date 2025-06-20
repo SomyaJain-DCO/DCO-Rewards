@@ -49,13 +49,6 @@ export default function Sidebar() {
   };
 
   const navigation = getNavigation();
-  const accountNavigation = [
-    { name: "Settings", href: "/settings", icon: Settings },
-  ];
-
-  const handleLogout = () => {
-    window.location.href = "/api/logout";
-  };
 
   return (
     <>
@@ -124,44 +117,6 @@ export default function Sidebar() {
                 </li>
               );
             })}
-            
-
-          </ul>
-          
-          <div className="px-4 mt-8 mb-2">
-            <span className="text-xs font-semibold text-primary-foreground/60 uppercase tracking-wide">
-              ACCOUNT
-            </span>
-          </div>
-          <ul className="space-y-1 px-2">
-            {accountNavigation.map((item) => {
-              const isActive = location === item.href;
-              return (
-                <li key={item.name}>
-                  <Link href={item.href}>
-                    <div
-                      className={cn(
-                        "flex items-center px-4 py-3 text-primary-foreground/80 rounded-lg hover:bg-primary-foreground/10 transition-colors cursor-pointer",
-                        isActive && "bg-primary-foreground/20 border-r-2 border-primary-foreground text-primary-foreground"
-                      )}
-                      onClick={() => setIsOpen(false)}
-                    >
-                      <item.icon className="mr-3 h-5 w-5 text-primary-foreground/60" />
-                      {item.name}
-                    </div>
-                  </Link>
-                </li>
-              );
-            })}
-            <li>
-              <button
-                onClick={handleLogout}
-                className="w-full flex items-center px-4 py-3 text-primary-foreground/80 rounded-lg hover:bg-primary-foreground/10 transition-colors"
-              >
-                <LogOut className="mr-3 h-5 w-5 text-primary-foreground/60" />
-                Logout
-              </button>
-            </li>
           </ul>
         </nav>
       </aside>
