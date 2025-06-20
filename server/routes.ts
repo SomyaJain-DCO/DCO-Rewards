@@ -349,6 +349,74 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Get team summary for approvers
+  app.get('/api/team/summary', isAuthenticated, async (req: any, res: any) => {
+    try {
+      const userId = req.user?.claims.sub;
+      if (!userId) return res.status(401).json({ message: "Unauthorized" });
+
+      const user = await storage.getUser(userId);
+      if (user?.role !== 'approver') {
+        return res.status(403).json({ message: "Access denied. Only approvers can view team summary." });
+      }
+
+      const allUsers = await storage.getAllUsers();
+      const totalMembers = allUsers.length;
+      
+      // Calculate team totals
+      let totalTeamPoints = 0;
+      let monthlyTeamPoints = 0;
+      let activeContributors = 0;
+      
+      const currentMonth = new Date().getMonth();
+      const currentYear = new Date().getFullYear();
+      
+      for (const teamUser of allUsers) {
+        const stats = await storage.getUserStatsById(teamUser.id);
+        totalTeamPoints += stats.totalPointsEarned || 0;
+        monthlyTeamPoints += stats.monthlyPoints || 0;
+        
+        if (stats.totalPointsEarned && stats.totalPointsEarned > 0) {
+          activeContributors++;
+        }
+      }
+
+      res.json({
+        totalTeamPoints,
+        monthlyTeamPoints,
+        activeContributors,
+        totalMembers
+      });
+    } catch (error) {
+      console.error("Error fetching team summary:", error);
+      res.status(500).json({ message: "Failed to fetch team summary" });
+    }
+  });
+
+  // Get pending activities count for approvers
+  app.get('/api/activities/pending/count', isAuthenticated, async (req: any, res: any) => {
+    try {
+      const userId = req.user?.claims.sub;
+      if (!userId) return res.status(401).json({ message: "Unauthorized" });
+
+      const user = await storage.getUser(userId);
+      if (user?.role !== 'approver') {
+        return res.status(403).json({ message: "Access denied. Only approvers can view pending count." });
+      }
+
+      const pendingActivities = await storage.getPendingActivities();
+      const totalPoints = pendingActivities.reduce((sum, activity) => sum + (activity.category.points || 0), 0);
+
+      res.json({
+        count: pendingActivities.length,
+        points: totalPoints
+      });
+    } catch (error) {
+      console.error("Error fetching pending activities count:", error);
+      res.status(500).json({ message: "Failed to fetch pending activities count" });
+    }
+  });
+
   // Get all users with points summary (approvers only)
   app.get('/api/users/points-summary', isAuthenticated, async (req: any, res: any) => {
     try {

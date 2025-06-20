@@ -14,9 +14,22 @@ export default function Dashboard() {
   const { toast } = useToast();
   const { user, isAuthenticated, isLoading } = useAuth();
 
+  const userRole = (user as any)?.role;
+
   const { data: stats, isLoading: statsLoading } = useQuery({
     queryKey: ["/api/stats"],
     enabled: isAuthenticated,
+  });
+
+  // For approvers, fetch team summary data
+  const { data: teamSummary, isLoading: teamSummaryLoading } = useQuery<any>({
+    queryKey: ["/api/team/summary"],
+    enabled: isAuthenticated && userRole === 'approver',
+  });
+
+  const { data: pendingActivitiesCount } = useQuery<any>({
+    queryKey: ["/api/activities/pending/count"],
+    enabled: isAuthenticated && userRole === 'approver',
   });
 
   const { data: leaderboard, isLoading: leaderboardLoading } = useQuery({
@@ -38,8 +51,6 @@ export default function Dashboard() {
     queryKey: ["/api/activities/recent"],
     enabled: isAuthenticated,
   });
-
-  const userRole = (user as any)?.role;
 
   useEffect(() => {
     if (!isLoading && !isAuthenticated) {
@@ -83,44 +94,91 @@ export default function Dashboard() {
     <div className="space-y-8">
       {/* Stats Cards */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-        <StatsCard
-          title="My Total Points"
-          value={stats?.totalPoints || 0}
-          subtitle="Points earned"
-          icon={Trophy}
-          iconColor="text-primary"
-          bgColor="bg-blue-100"
-          href="/my-activities?filter=all"
-          clickable={true}
-        />
-        <StatsCard
-          title="This Month"
-          value={stats?.monthlyPoints || 0}
-          subtitle="Points this month"
-          icon={Calendar}
-          iconColor="text-secondary"
-          bgColor="bg-green-100"
-          href="/my-activities?filter=monthly"
-          clickable={true}
-        />
-        <StatsCard
-          title="Pending Approval"
-          value={stats?.pendingActivities || 0}
-          subtitle={`${stats?.pendingPoints || 0} points pending`}
-          icon={Clock}
-          iconColor="text-yellow-600"
-          bgColor="bg-yellow-100"
-          href="/my-activities?filter=pending"
-          clickable={true}
-        />
-        <StatsCard
-          title="Ranking"
-          value={stats?.ranking ? `#${stats.ranking}` : "N/A"}
-          subtitle={`of ${stats?.totalMembers || 0} members`}
-          icon={Medal}
-          iconColor="text-purple-600"
-          bgColor="bg-purple-100"
-        />
+        {userRole === 'approver' ? (
+          <>
+            <StatsCard
+              title="Total Team Points"
+              value={teamSummary?.totalTeamPoints || 0}
+              subtitle="Points awarded to team"
+              icon={Trophy}
+              iconColor="text-primary"
+              bgColor="bg-blue-100"
+              href="/all-activities"
+              clickable={true}
+            />
+            <StatsCard
+              title="This Month"
+              value={teamSummary?.monthlyTeamPoints || 0}
+              subtitle="Team points this month"
+              icon={Calendar}
+              iconColor="text-secondary"
+              bgColor="bg-green-100"
+              href="/all-activities"
+              clickable={true}
+            />
+            <StatsCard
+              title="Pending Approvals"
+              value={pendingActivitiesCount?.count || 0}
+              subtitle={`${pendingActivitiesCount?.points || 0} points pending`}
+              icon={Clock}
+              iconColor="text-yellow-600"
+              bgColor="bg-yellow-100"
+              href="/approvals"
+              clickable={true}
+            />
+            <StatsCard
+              title="Active Contributors"
+              value={teamSummary?.activeContributors || 0}
+              subtitle={`of ${teamSummary?.totalMembers || 0} members`}
+              icon={Medal}
+              iconColor="text-purple-600"
+              bgColor="bg-purple-100"
+              href="/team"
+              clickable={true}
+            />
+          </>
+        ) : (
+          <>
+            <StatsCard
+              title="My Total Points"
+              value={stats?.totalPoints || 0}
+              subtitle="Points earned"
+              icon={Trophy}
+              iconColor="text-primary"
+              bgColor="bg-blue-100"
+              href="/my-activities?filter=all"
+              clickable={true}
+            />
+            <StatsCard
+              title="This Month"
+              value={stats?.monthlyPoints || 0}
+              subtitle="Points this month"
+              icon={Calendar}
+              iconColor="text-secondary"
+              bgColor="bg-green-100"
+              href="/my-activities?filter=monthly"
+              clickable={true}
+            />
+            <StatsCard
+              title="Pending Approval"
+              value={stats?.pendingActivities || 0}
+              subtitle={`${stats?.pendingPoints || 0} points pending`}
+              icon={Clock}
+              iconColor="text-yellow-600"
+              bgColor="bg-yellow-100"
+              href="/my-activities?filter=pending"
+              clickable={true}
+            />
+            <StatsCard
+              title="Ranking"
+              value={stats?.ranking ? `#${stats.ranking}` : "N/A"}
+              subtitle={`of ${stats?.totalMembers || 0} members`}
+              icon={Medal}
+              iconColor="text-purple-600"
+              bgColor="bg-purple-100"
+            />
+          </>
+        )}
       </div>
 
       {/* Points Table */}
