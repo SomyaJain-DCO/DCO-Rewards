@@ -124,82 +124,55 @@ export default function Profile() {
           </CardContent>
         </Card>
 
-        {/* Performance Stats */}
+        {/* Performance Summary */}
         <div className="lg:col-span-2">
           <Card>
             <CardHeader>
               <CardTitle>Performance Summary</CardTitle>
             </CardHeader>
             <CardContent>
-              <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
-                <div className="bg-blue-50 p-4 rounded-lg">
-                  <div className="flex items-center justify-between">
+              <div className="space-y-4">
+                <div className="flex items-center justify-between p-4 bg-gray-50 rounded-lg">
+                  <div className="flex items-center space-x-3">
+                    <Trophy className="text-blue-600 text-xl" />
                     <div>
-                      <p className="text-sm text-gray-600">Total Points</p>
+                      <p className="text-sm text-gray-600">Total Points Earned</p>
                       <p className="text-2xl font-bold text-gray-800">{stats?.totalPoints || 0}</p>
                     </div>
-                    <Trophy className="text-blue-600 text-xl" />
                   </div>
                 </div>
                 
                 {userRole === 'approver' && (
-                  <div className="bg-green-50 p-4 rounded-lg">
-                    <div className="flex items-center justify-between">
-                      <div>
-                        <p className="text-sm text-gray-600">Total Earnings</p>
-                        <p className="text-xl font-bold text-gray-800">₹{stats?.totalEarnings?.toLocaleString() || 0}</p>
-                      </div>
+                  <div className="flex items-center justify-between p-4 bg-gray-50 rounded-lg">
+                    <div className="flex items-center space-x-3">
                       <DollarSign className="text-green-600 text-xl" />
+                      <div>
+                        <p className="text-sm text-gray-600">Total Monetary Value</p>
+                        <p className="text-2xl font-bold text-gray-800">₹{stats?.totalEarnings?.toLocaleString() || 0}</p>
+                      </div>
                     </div>
                   </div>
                 )}
                 
-                <div className="bg-purple-50 p-4 rounded-lg">
-                  <div className="flex items-center justify-between">
-                    <div>
-                      <p className="text-sm text-gray-600">Monthly Points</p>
-                      <p className="text-2xl font-bold text-gray-800">{stats?.monthlyPoints || 0}</p>
-                    </div>
+                <div className="flex items-center justify-between p-4 bg-gray-50 rounded-lg">
+                  <div className="flex items-center space-x-3">
                     <Calendar className="text-purple-600 text-xl" />
+                    <div>
+                      <p className="text-sm text-gray-600">This Month</p>
+                      <p className="text-xl font-bold text-gray-800">{stats?.monthlyPoints || 0} points</p>
+                    </div>
                   </div>
                 </div>
                 
-                {userRole === 'approver' && (
-                  <div className="bg-indigo-50 p-4 rounded-lg">
-                    <div className="flex items-center justify-between">
-                      <div>
-                        <p className="text-sm text-gray-600">Monthly Earnings</p>
-                        <p className="text-xl font-bold text-gray-800">₹{stats?.monthlyEarnings?.toLocaleString() || 0}</p>
-                      </div>
-                      <DollarSign className="text-indigo-600 text-xl" />
-                    </div>
-                  </div>
-                )}
-                
-                <div className="bg-orange-50 p-4 rounded-lg">
-                  <div className="flex items-center justify-between">
+                <div className="flex items-center justify-between p-4 bg-gray-50 rounded-lg">
+                  <div className="flex items-center space-x-3">
+                    <User className="text-orange-600 text-xl" />
                     <div>
                       <p className="text-sm text-gray-600">Team Ranking</p>
-                      <p className="text-lg font-bold text-gray-800">
-                        #{stats?.ranking || 'N/A'} of {stats?.totalMembers || 0}
-                      </p>
+                      <p className="text-xl font-bold text-gray-800">#{stats?.ranking || 'N/A'} of {stats?.totalMembers || 0}</p>
                     </div>
-                    <User className="text-orange-600 text-xl" />
                   </div>
                 </div>
-                
-                {stats?.pendingActivities && stats.pendingActivities > 0 && (
-                  <div className="bg-yellow-50 p-4 rounded-lg">
-                    <div className="flex items-center justify-between">
-                      <div>
-                        <p className="text-sm text-gray-600">Pending</p>
-                        <p className="text-lg font-bold text-gray-800">{stats.pendingActivities} activities</p>
-                        <p className="text-xs text-gray-500">{stats.pendingPoints} points</p>
-                      </div>
-                      <Calendar className="text-yellow-600 text-xl" />
-                    </div>
-                  </div>
-                )}
               </div>
             </CardContent>
           </Card>
