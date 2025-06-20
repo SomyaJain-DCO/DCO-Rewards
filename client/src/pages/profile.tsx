@@ -26,15 +26,32 @@ export default function Profile() {
   const [isEditingDesignation, setIsEditingDesignation] = useState(false);
   const [newDesignation, setNewDesignation] = useState("");
 
-  // Mutation for updating designation
+  // Function to get role based on designation
+  const getRoleFromDesignation = (designation: string): string => {
+    switch (designation) {
+      case "Partner":
+        return "approver";
+      case "Senior Manager":
+      case "Manager":
+      case "Associate":
+      case "Senior Consultant":
+      case "Analyst":
+        return "contributor";
+      default:
+        return "contributor";
+    }
+  };
+
+  // Mutation for updating designation and role
   const updateDesignationMutation = useMutation({
     mutationFn: async (designation: string) => {
+      const role = getRoleFromDesignation(designation);
       const response = await fetch("/api/profile/designation", {
         method: "PUT",
         headers: {
           "Content-Type": "application/json",
         },
-        body: JSON.stringify({ designation }),
+        body: JSON.stringify({ designation, role }),
       });
       
       if (!response.ok) {
@@ -280,21 +297,12 @@ export default function Profile() {
                           <SelectValue placeholder="Select your designation" />
                         </SelectTrigger>
                         <SelectContent>
-                          <SelectItem value="Junior Associate">Junior Associate</SelectItem>
-                          <SelectItem value="Associate">Associate</SelectItem>
-                          <SelectItem value="Senior Associate">Senior Associate</SelectItem>
-                          <SelectItem value="Assistant Manager">Assistant Manager</SelectItem>
-                          <SelectItem value="Manager">Manager</SelectItem>
-                          <SelectItem value="Senior Manager">Senior Manager</SelectItem>
                           <SelectItem value="Partner">Partner</SelectItem>
-                          <SelectItem value="Chartered Accountant">Chartered Accountant</SelectItem>
-                          <SelectItem value="Articled Assistant">Articled Assistant</SelectItem>
-                          <SelectItem value="Tax Consultant">Tax Consultant</SelectItem>
-                          <SelectItem value="Audit Assistant">Audit Assistant</SelectItem>
-                          <SelectItem value="Compliance Officer">Compliance Officer</SelectItem>
-                          <SelectItem value="Finance Executive">Finance Executive</SelectItem>
-                          <SelectItem value="Accounts Executive">Accounts Executive</SelectItem>
-                          <SelectItem value="Administrative Assistant">Administrative Assistant</SelectItem>
+                          <SelectItem value="Senior Manager">Senior Manager</SelectItem>
+                          <SelectItem value="Manager">Manager</SelectItem>
+                          <SelectItem value="Associate">Associate</SelectItem>
+                          <SelectItem value="Senior Consultant">Senior Consultant</SelectItem>
+                          <SelectItem value="Analyst">Analyst</SelectItem>
                         </SelectContent>
                       </Select>
                       <Button
@@ -347,10 +355,16 @@ export default function Profile() {
                   {/* Role-based description */}
                   <p className="text-xs text-gray-500 text-center max-w-xs">
                     {(user as any)?.role === 'approver' 
-                      ? 'Can review and approve team activities, access admin features, and manage encashment requests.'
-                      : 'Can submit activities for approval, view leaderboards, and request point encashments.'
+                      ? 'Partner level access: Can review and approve team activities, access admin features, and manage encashment requests.'
+                      : 'Team member access: Can submit activities for approval, view leaderboards, and request point encashments.'
                     }
                   </p>
+                  
+                  {/* Designation-Role Mapping Info */}
+                  <div className="text-xs text-gray-400 text-center mt-2">
+                    <p className="font-medium">Designation & Role Mapping:</p>
+                    <p>Partner → Approver | Senior Manager, Manager, Associate, Senior Consultant, Analyst → Contributor</p>
+                  </div>
                 </div>
               </div>
             </div>

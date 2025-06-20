@@ -45,17 +45,21 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const userId = req.user?.claims.sub;
       if (!userId) return res.status(401).json({ message: "Unauthorized" });
 
-      const { designation } = req.body;
+      const { designation, role } = req.body;
 
       if (typeof designation !== 'string') {
         return res.status(400).json({ message: "Designation must be a string" });
       }
 
-      const updatedUser = await storage.updateUserDesignation(userId, designation.trim());
+      if (typeof role !== 'string' || !['contributor', 'approver'].includes(role)) {
+        return res.status(400).json({ message: "Role must be either 'contributor' or 'approver'" });
+      }
+
+      const updatedUser = await storage.updateUserDesignationAndRole(userId, designation.trim(), role);
       res.json(updatedUser);
     } catch (error) {
-      console.error("Error updating designation:", error);
-      res.status(500).json({ message: "Failed to update designation" });
+      console.error("Error updating designation and role:", error);
+      res.status(500).json({ message: "Failed to update designation and role" });
     }
   });
 
