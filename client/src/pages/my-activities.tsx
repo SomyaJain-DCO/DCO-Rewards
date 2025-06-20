@@ -105,7 +105,7 @@ export default function MyActivities() {
   // Delete mutation
   const deleteMutation = useMutation({
     mutationFn: async (activityId: number) => {
-      return await apiRequest("DELETE", `/api/activities/${activityId}`);
+      return await apiRequest(`/api/activities/${activityId}`, "DELETE");
     },
     onSuccess: () => {
       toast({
