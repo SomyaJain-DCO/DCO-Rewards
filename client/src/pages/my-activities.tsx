@@ -81,7 +81,7 @@ export default function MyActivities() {
   const editMutation = useMutation({
     mutationFn: async (data: EditFormData & { id: number }) => {
       const { id, ...updateData } = data;
-      return await apiRequest(`/api/activities/${id}`, "PUT", updateData);
+      return await apiRequest("PUT", `/api/activities/${id}`, updateData);
     },
     onSuccess: () => {
       toast({
