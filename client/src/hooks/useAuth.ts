@@ -5,9 +5,10 @@ import type { User } from "@shared/schema";
 export function useAuth() {
   const { data: user, isLoading, error } = useQuery<User | null>({
     queryKey: ["/api/auth/user"],
-    queryFn: async () => {
+    queryFn: async (): Promise<User | null> => {
       try {
-        return await apiRequest("/api/auth/user");
+        const result = await apiRequest("/api/auth/user");
+        return result as User;
       } catch (err: any) {
         // Handle 403 pending approval status
         if (err.message?.includes("403") && err.message?.includes("Account pending approval")) {

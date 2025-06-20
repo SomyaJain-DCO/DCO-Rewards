@@ -18,13 +18,13 @@ import Encashment from "@/pages/encashment";
 import Encashments from "@/pages/encashments";
 import Admin from "@/pages/admin";
 import CompleteProfile from "@/pages/complete-profile";
-import UserApprovals from "@/pages/user-approvals";
 import PendingApproval from "@/pages/pending-approval";
+import UserApprovals from "@/pages/user-approvals";
 import Sidebar from "@/components/sidebar";
 import Header from "@/components/header";
 
 function Router() {
-  const { isAuthenticated, isLoading, user, isPendingApproval } = useAuth();
+  const { isAuthenticated, isLoading, user } = useAuth();
 
   if (isLoading) {
     return (
@@ -32,11 +32,6 @@ function Router() {
         <div className="animate-spin rounded-full h-32 w-32 border-b-2 border-primary"></div>
       </div>
     );
-  }
-
-  // Show pending approval page if user is pending approval
-  if (isPendingApproval) {
-    return <PendingApproval />;
   }
 
   if (!isAuthenticated) {
@@ -49,10 +44,13 @@ function Router() {
   }
 
   // Check if profile is incomplete (missing firstName, lastName, or designation)
-  const isProfileIncomplete = user && (!user.firstName || !user.lastName || !user.designation);
-
-  if (isProfileIncomplete) {
+  if (user && (!user.firstName || !user.lastName || !user.designation)) {
     return <CompleteProfile />;
+  }
+
+  // Check if user is pending approval
+  if (user && user.status === 'pending') {
+    return <PendingApproval />;
   }
 
   return (
@@ -86,8 +84,8 @@ function App() {
   return (
     <QueryClientProvider client={queryClient}>
       <TooltipProvider>
-        <Toaster />
         <Router />
+        <Toaster />
       </TooltipProvider>
     </QueryClientProvider>
   );
