@@ -150,6 +150,7 @@ Changelog:
 - June 20, 2025. Removed activity overview section from My Profile page, keeping only essential user information and performance metrics
 - June 20, 2025. Enhanced All Activities page to display activity descriptions alongside titles for better context and information
 - June 20, 2025. Updated All Activities page to show title and description on same line with vertical bar separator for compact layout
+- June 20, 2025. Applied same title and description layout format to My Activities page for consistent user experience
 ```
 
 ## User Preferences

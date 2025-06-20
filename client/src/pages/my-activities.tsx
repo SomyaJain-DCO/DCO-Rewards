@@ -224,12 +224,13 @@ export default function MyActivities() {
                 <div className="flex items-start justify-between">
                   <div className="flex-1 min-w-0">
                     <div className="flex items-center gap-3 mb-2">
-                      <h3 className="font-semibold text-gray-900 truncate">{activity.title}</h3>
                       {getStatusBadge(activity.status)}
                     </div>
                     
-                    <p className="text-gray-700 text-sm mb-3 line-clamp-2">
-                      {activity.description}
+                    <p className="text-sm text-gray-900 mb-3 line-clamp-2">
+                      <span className="font-medium">{activity.title}</span>
+                      <span className="text-gray-400 mx-2">|</span>
+                      <span className="text-gray-600">{activity.description}</span>
                     </p>
                     
                     <div className="flex items-center gap-4 text-xs text-gray-500">
