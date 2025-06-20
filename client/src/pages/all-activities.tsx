@@ -238,18 +238,19 @@ export default function AllActivities() {
                         )}
                       </div>
 
-                      <p className="text-sm text-gray-900 mt-1 line-clamp-2">
-                        <span className="font-medium">{activity.title}</span>
-                        <span className="text-gray-400 mx-2">|</span>
-                        <span className="text-gray-600">{activity.description}</span>
-                      </p>
+                      <div className="flex items-center gap-3 mt-1">
+                        <p className="text-sm text-gray-900 flex-1 line-clamp-1">
+                          <span className="font-medium">{activity.title}</span>
+                          <span className="text-gray-400 mx-2">|</span>
+                          <span className="text-gray-600">{activity.description}</span>
+                        </p>
+                        {getStatusBadge(activity.status)}
+                      </div>
                     </div>
                   </div>
 
-                  {/* Status and Points */}
+                  {/* Points */}
                   <div className="flex items-center space-x-3 flex-shrink-0">
-                    {getStatusBadge(activity.status)}
-                    
                     <div className="text-right">
                       <div className="font-bold text-gray-900">
                         {activity.category.points} pts

@@ -151,6 +151,7 @@ Changelog:
 - June 20, 2025. Enhanced All Activities page to display activity descriptions alongside titles for better context and information
 - June 20, 2025. Updated All Activities page to show title and description on same line with vertical bar separator for compact layout
 - June 20, 2025. Applied same title and description layout format to My Activities page for consistent user experience
+- June 20, 2025. Made activity displays more concise by showing title, description, and status badge all on same row with single line layout
 ```
 
 ## User Preferences
