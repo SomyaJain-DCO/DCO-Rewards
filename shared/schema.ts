@@ -82,12 +82,31 @@ export const encashmentRequests = pgTable("encashment_requests", {
   updatedAt: timestamp("updated_at").defaultNow(),
 });
 
+export const profileChangeRequests = pgTable("profile_change_requests", {
+  id: serial("id").primaryKey(),
+  userId: varchar("user_id").notNull().references(() => users.id),
+  requestedFirstName: varchar("requested_first_name").notNull(),
+  requestedLastName: varchar("requested_last_name").notNull(),
+  requestedDesignation: varchar("requested_designation").notNull(),
+  currentFirstName: varchar("current_first_name"),
+  currentLastName: varchar("current_last_name"),
+  currentDesignation: varchar("current_designation"),
+  status: varchar("status", { length: 20 }).notNull().default("pending"),
+  approvedBy: varchar("approved_by").references(() => users.id),
+  approvedAt: timestamp("approved_at"),
+  rejectionReason: text("rejection_reason"),
+  createdAt: timestamp("created_at").defaultNow(),
+  updatedAt: timestamp("updated_at").defaultNow(),
+});
+
 // Relations
 export const usersRelations = relations(users, ({ many }) => ({
   activities: many(activities),
   approvedActivities: many(activities, { relationName: "approver" }),
   encashmentRequests: many(encashmentRequests),
   approvedEncashmentRequests: many(encashmentRequests, { relationName: "encashmentApprover" }),
+  profileChangeRequests: many(profileChangeRequests),
+  approvedProfileChangeRequests: many(profileChangeRequests, { relationName: "profileChangeApprover" }),
 }));
 
 export const activitiesRelations = relations(activities, ({ one }) => ({
@@ -119,6 +138,18 @@ export const encashmentRequestsRelations = relations(encashmentRequests, ({ one 
     fields: [encashmentRequests.approvedBy],
     references: [users.id],
     relationName: "encashmentApprover",
+  }),
+}));
+
+export const profileChangeRequestsRelations = relations(profileChangeRequests, ({ one }) => ({
+  user: one(users, {
+    fields: [profileChangeRequests.userId],
+    references: [users.id],
+  }),
+  approver: one(users, {
+    fields: [profileChangeRequests.approvedBy],
+    references: [users.id],
+    relationName: "profileChangeApprover",
   }),
 }));
 
@@ -163,6 +194,22 @@ export const approveEncashmentRequestSchema = z.object({
   paymentDetails: z.string().optional(),
 });
 
+export const insertProfileChangeRequestSchema = createInsertSchema(profileChangeRequests).omit({
+  id: true,
+  status: true,
+  approvedBy: true,
+  approvedAt: true,
+  rejectionReason: true,
+  createdAt: true,
+  updatedAt: true,
+});
+
+export const approveProfileChangeRequestSchema = z.object({
+  id: z.number(),
+  status: z.enum(["approved", "rejected"]),
+  rejectionReason: z.string().optional(),
+});
+
 // Types
 export type UpsertUser = z.infer<typeof insertUserSchema>;
 export type User = typeof users.$inferSelect;
@@ -174,6 +221,9 @@ export type ApproveActivity = z.infer<typeof approveActivitySchema>;
 export type EncashmentRequest = typeof encashmentRequests.$inferSelect;
 export type InsertEncashmentRequest = z.infer<typeof insertEncashmentRequestSchema>;
 export type ApproveEncashmentRequest = z.infer<typeof approveEncashmentRequestSchema>;
+export type ProfileChangeRequest = typeof profileChangeRequests.$inferSelect;
+export type InsertProfileChangeRequest = z.infer<typeof insertProfileChangeRequestSchema>;
+export type ApproveProfileChangeRequest = z.infer<typeof approveProfileChangeRequestSchema>;
 
 // Activity with relations
 export type ActivityWithDetails = Activity & {
@@ -184,6 +234,11 @@ export type ActivityWithDetails = Activity & {
 
 // Encashment request with relations
 export type EncashmentRequestWithDetails = EncashmentRequest & {
+  user: User;
+  approver?: User;
+};
+
+export type ProfileChangeRequestWithDetails = ProfileChangeRequest & {
   user: User;
   approver?: User;
 };

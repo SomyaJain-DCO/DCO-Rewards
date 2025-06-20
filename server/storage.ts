@@ -3,6 +3,7 @@ import {
   activities,
   activityCategories,
   encashmentRequests,
+  profileChangeRequests,
   type User,
   type UpsertUser,
   type Activity,
@@ -15,6 +16,10 @@ import {
   type ApproveEncashmentRequest,
   type ActivityWithDetails,
   type EncashmentRequestWithDetails,
+  type ProfileChangeRequest,
+  type InsertProfileChangeRequest,
+  type ApproveProfileChangeRequest,
+  type ProfileChangeRequestWithDetails,
   type UserStats,
 } from "@shared/schema";
 import { db } from "./db";
@@ -61,6 +66,11 @@ export interface IStorage {
   getEncashmentRequestsByUser(userId: string): Promise<EncashmentRequestWithDetails[]>;
   getPendingEncashmentRequests(): Promise<EncashmentRequestWithDetails[]>;
   approveEncashmentRequest(approval: ApproveEncashmentRequest, approverId: string): Promise<EncashmentRequest>;
+  
+  // Profile change request operations
+  createProfileChangeRequest(request: InsertProfileChangeRequest): Promise<ProfileChangeRequest>;
+  getPendingProfileChangeRequests(): Promise<ProfileChangeRequestWithDetails[]>;
+  approveProfileChangeRequest(approval: ApproveProfileChangeRequest, approverId: string): Promise<ProfileChangeRequest>;
 }
 
 export class DatabaseStorage implements IStorage {
@@ -780,6 +790,104 @@ export class DatabaseStorage implements IStorage {
       .returning();
 
     return encashmentRequest;
+  }
+
+  async createProfileChangeRequest(request: InsertProfileChangeRequest): Promise<ProfileChangeRequest> {
+    const [profileChangeRequest] = await db
+      .insert(profileChangeRequests)
+      .values(request)
+      .returning();
+    return profileChangeRequest;
+  }
+
+  async getPendingProfileChangeRequests(): Promise<ProfileChangeRequestWithDetails[]> {
+    return await db
+      .select({
+        id: profileChangeRequests.id,
+        userId: profileChangeRequests.userId,
+        requestedFirstName: profileChangeRequests.requestedFirstName,
+        requestedLastName: profileChangeRequests.requestedLastName,
+        requestedDesignation: profileChangeRequests.requestedDesignation,
+        currentFirstName: profileChangeRequests.currentFirstName,
+        currentLastName: profileChangeRequests.currentLastName,
+        currentDesignation: profileChangeRequests.currentDesignation,
+        status: profileChangeRequests.status,
+        approvedBy: profileChangeRequests.approvedBy,
+        approvedAt: profileChangeRequests.approvedAt,
+        rejectionReason: profileChangeRequests.rejectionReason,
+        createdAt: profileChangeRequests.createdAt,
+        updatedAt: profileChangeRequests.updatedAt,
+        user: {
+          id: users.id,
+          email: users.email,
+          firstName: users.firstName,
+          lastName: users.lastName,
+          profileImageUrl: users.profileImageUrl,
+          role: users.role,
+          designation: users.designation,
+          department: users.department,
+          createdAt: users.createdAt,
+          updatedAt: users.updatedAt,
+        },
+        approver: {
+          id: sql`approver.id`,
+          email: sql`approver.email`,
+          firstName: sql`approver.first_name`,
+          lastName: sql`approver.last_name`,
+          profileImageUrl: sql`approver.profile_image_url`,
+          role: sql`approver.role`,
+          designation: sql`approver.designation`,
+          department: sql`approver.department`,
+          createdAt: sql`approver.created_at`,
+          updatedAt: sql`approver.updated_at`,
+        },
+      })
+      .from(profileChangeRequests)
+      .innerJoin(users, eq(profileChangeRequests.userId, users.id))
+      .leftJoin(sql`${users} as approver`, sql`${profileChangeRequests.approvedBy} = approver.id`)
+      .where(eq(profileChangeRequests.status, "pending"))
+      .orderBy(desc(profileChangeRequests.createdAt)) as ProfileChangeRequestWithDetails[];
+  }
+
+  async approveProfileChangeRequest(approval: ApproveProfileChangeRequest, approverId: string): Promise<ProfileChangeRequest> {
+    const [approvedRequest] = await db
+      .update(profileChangeRequests)
+      .set({
+        status: approval.status,
+        approvedBy: approverId,
+        approvedAt: new Date(),
+        rejectionReason: approval.rejectionReason,
+        updatedAt: new Date(),
+      })
+      .where(eq(profileChangeRequests.id, approval.id))
+      .returning();
+
+    // If approved, update the user's profile
+    if (approval.status === 'approved') {
+      const request = await db
+        .select()
+        .from(profileChangeRequests)
+        .where(eq(profileChangeRequests.id, approval.id))
+        .limit(1);
+
+      if (request.length > 0) {
+        const changeRequest = request[0];
+        const role = changeRequest.requestedDesignation === 'Partner' ? 'approver' : 'contributor';
+        
+        await db
+          .update(users)
+          .set({
+            firstName: changeRequest.requestedFirstName,
+            lastName: changeRequest.requestedLastName,
+            designation: changeRequest.requestedDesignation,
+            role: role,
+            updatedAt: new Date(),
+          })
+          .where(eq(users.id, changeRequest.userId));
+      }
+    }
+
+    return approvedRequest;
   }
 }
 
