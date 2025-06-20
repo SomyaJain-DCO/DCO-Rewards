@@ -61,7 +61,7 @@ export default function Header() {
   };
 
   return (
-    <header className="bg-white shadow-sm border-b border-gray-200 px-6 py-4">
+    <header className="bg-white shadow-sm border-b border-gray-200 px-6 py-4 lg:ml-0 ml-16">
       <div className="flex items-center justify-between">
         <div>
           <h1 className="text-2xl font-bold text-gray-800">{pageInfo.title}</h1>

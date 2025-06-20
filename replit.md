@@ -132,6 +132,7 @@ Changelog:
 - June 20, 2025. Implemented navy blue color theme matching company logo with proper text contrast
 - June 20, 2025. Added collapsible sidebar with mobile hamburger menu and resolved all text contrast issues
 - June 20, 2025. Created clickable stats cards linking to detailed activity lists with filtering and concise card layout
+- June 20, 2025. Fixed header positioning to prevent sidebar from hiding dashboard title text
 ```
 
 ## User Preferences
