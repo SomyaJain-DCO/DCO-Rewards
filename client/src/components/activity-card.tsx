@@ -129,19 +129,22 @@ export default function ActivityCard({ activity, showApprover = false, userRole,
           </div>
         </div>
         <div className="flex items-center space-x-4 ml-4">
-          {activity.attachmentUrl && (
-            <Button variant="ghost" size="sm" asChild>
-              <a href={activity.attachmentUrl} target="_blank" rel="noopener noreferrer">
-                <ExternalLink className="h-4 w-4" />
-              </a>
-            </Button>
-          )}
-          {activity.filePath && (
-            <div className="text-xs text-gray-600 flex items-center gap-1">
-              <FileText className="h-3 w-3" />
-              <span className="truncate max-w-[120px]" title={activity.filePath}>
-                {activity.filePath}
-              </span>
+          {(activity.attachmentUrl || activity.filePath) && (
+            <div className="flex items-center gap-2">
+              {activity.attachmentUrl && (
+                <Button variant="outline" size="sm" asChild>
+                  <a href={activity.attachmentUrl} target="_blank" rel="noopener noreferrer" className="flex items-center gap-1">
+                    <ExternalLink className="h-3 w-3" />
+                    <span className="text-xs">View</span>
+                  </a>
+                </Button>
+              )}
+              {activity.filePath && (
+                <Button variant="outline" size="sm" onClick={() => navigator.clipboard.writeText(activity.filePath || '')} className="flex items-center gap-1">
+                  <FileText className="h-3 w-3" />
+                  <span className="text-xs">Copy Path</span>
+                </Button>
+              )}
             </div>
           )}
           <div className="text-right">

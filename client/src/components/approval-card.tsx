@@ -1,6 +1,6 @@
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { ExternalLink, Paperclip, Calendar } from "lucide-react";
+import { ExternalLink, Paperclip, Calendar, FileText } from "lucide-react";
 import { formatDistanceToNow, format } from "date-fns";
 
 interface ApprovalCardProps {
@@ -10,6 +10,7 @@ interface ApprovalCardProps {
     description: string;
     activityDate: string;
     attachmentUrl?: string;
+    filePath?: string;
     user: {
       id: string;
       firstName?: string;
@@ -77,13 +78,25 @@ export default function ApprovalCard({ activity, onApprove, onReject, isLoading 
               <span>{activity.category.points} points</span>
               <span>{format(new Date(activity.activityDate), "MMM d, yyyy")}</span>
               <span>{formatDistanceToNow(new Date(activity.createdAt))} ago</span>
-              {activity.attachmentUrl && (
-                <span className="flex items-center">
-                  <Paperclip className="h-3 w-3 mr-1" />
-                  Attachment
-                </span>
-              )}
             </div>
+            {(activity.attachmentUrl || activity.filePath) && (
+              <div className="flex items-center gap-2 mt-2">
+                {activity.attachmentUrl && (
+                  <Button variant="outline" size="sm" asChild>
+                    <a href={activity.attachmentUrl} target="_blank" rel="noopener noreferrer" className="flex items-center gap-1">
+                      <ExternalLink className="h-3 w-3" />
+                      <span className="text-xs">View Attachment</span>
+                    </a>
+                  </Button>
+                )}
+                {activity.filePath && (
+                  <Button variant="outline" size="sm" onClick={() => navigator.clipboard.writeText(activity.filePath || '')} className="flex items-center gap-1">
+                    <FileText className="h-3 w-3" />
+                    <span className="text-xs">Copy Path</span>
+                  </Button>
+                )}
+              </div>
+            )}
           </div>
         </div>
 
