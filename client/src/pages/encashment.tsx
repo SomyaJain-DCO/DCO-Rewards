@@ -130,27 +130,42 @@ export default function Encashment() {
         </div>
       </div>
 
-      {/* Available Points Summary */}
+      {/* Points Overview */}
       <Card>
         <CardHeader>
           <CardTitle className="flex items-center gap-2">
             <DollarSign className="w-5 h-5 text-green-600" />
-            Available Points
+            Points Overview
           </CardTitle>
         </CardHeader>
         <CardContent>
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+            {/* Total Earned */}
             <div className="text-center p-4 bg-blue-50 rounded-lg">
-              <div className="text-2xl font-bold text-blue-600">{availablePoints}</div>
-              <div className="text-sm text-gray-600">Total Points</div>
+              <div className="text-2xl font-bold text-blue-600">{stats?.totalPointsEarned || 0}</div>
+              <div className="text-sm text-gray-600">Total Earned</div>
+              <div className="text-xs text-blue-500">₹{((stats?.totalEarningsEarned || 0)).toLocaleString()}</div>
             </div>
+            
+            {/* Redeemed */}
+            <div className="text-center p-4 bg-red-50 rounded-lg">
+              <div className="text-2xl font-bold text-red-600">{stats?.redeemedPoints || 0}</div>
+              <div className="text-sm text-gray-600">Redeemed</div>
+              <div className="text-xs text-red-500">₹{((stats?.redeemedValue || 0)).toLocaleString()}</div>
+            </div>
+            
+            {/* Balance Available */}
             <div className="text-center p-4 bg-green-50 rounded-lg">
-              <div className="text-2xl font-bold text-green-600">₹{(availablePoints * 100).toLocaleString()}</div>
-              <div className="text-sm text-gray-600">Total Value</div>
+              <div className="text-2xl font-bold text-green-600">{availablePoints}</div>
+              <div className="text-sm text-gray-600">Balance Available</div>
+              <div className="text-xs text-green-500">₹{(availablePoints * 100).toLocaleString()}</div>
             </div>
+            
+            {/* Rate */}
             <div className="text-center p-4 bg-purple-50 rounded-lg">
               <div className="text-2xl font-bold text-purple-600">₹100</div>
               <div className="text-sm text-gray-600">Per Point</div>
+              <div className="text-xs text-purple-500">Exchange Rate</div>
             </div>
           </div>
         </CardContent>

@@ -258,9 +258,26 @@ export class DatabaseStorage implements IStorage {
       .innerJoin(activityCategories, eq(activities.categoryId, activityCategories.id))
       .where(and(eq(activities.userId, userId), eq(activities.status, "pending")));
 
+    // Get approved encashment requests to calculate redeemed points
+    const approvedEncashments = await db
+      .select({
+        pointsRequested: encashmentRequests.pointsRequested,
+        monetaryValue: encashmentRequests.monetaryValue,
+      })
+      .from(encashmentRequests)
+      .where(and(eq(encashmentRequests.userId, userId), eq(encashmentRequests.status, "approved")));
+
     // Calculate totals
-    const totalPoints = approvedActivities.reduce((sum, activity) => sum + activity.points, 0);
+    const totalPointsEarned = approvedActivities.reduce((sum, activity) => sum + activity.points, 0);
     const totalEarnings = approvedActivities.reduce((sum, activity) => sum + (activity.monetaryValue || 0), 0);
+    
+    // Calculate redeemed points
+    const redeemedPoints = approvedEncashments.reduce((sum, encashment) => sum + encashment.pointsRequested, 0);
+    const redeemedValue = approvedEncashments.reduce((sum, encashment) => sum + encashment.monetaryValue, 0);
+    
+    // Calculate balance points
+    const balancePoints = totalPointsEarned - redeemedPoints;
+    const balanceValue = totalEarnings - redeemedValue;
     
     // Calculate monthly points (current month)
     const currentMonth = new Date();
@@ -277,7 +294,7 @@ export class DatabaseStorage implements IStorage {
     const pendingPoints = pendingActivities.reduce((sum, activity) => sum + activity.points, 0);
     const pendingEarnings = pendingActivities.reduce((sum, activity) => sum + (activity.monetaryValue || 0), 0);
 
-    // Get ranking
+    // Get ranking (based on balance points for fair comparison)
     const leaderboard = await this.getLeaderboard();
     const userRanking = leaderboard.findIndex(user => user.id === userId) + 1;
 
@@ -287,8 +304,12 @@ export class DatabaseStorage implements IStorage {
       .from(users);
 
     return {
-      totalPoints,
-      totalEarnings,
+      totalPoints: balancePoints, // Changed to balance points for consistency
+      totalEarnings: balanceValue, // Changed to balance value for consistency
+      totalPointsEarned,
+      totalEarningsEarned: totalEarnings,
+      redeemedPoints,
+      redeemedValue,
       monthlyPoints,
       monthlyEarnings,
       pendingPoints,

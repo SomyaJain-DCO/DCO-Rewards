@@ -143,6 +143,8 @@ Changelog:
 - June 20, 2025. Created separate "All Activities" navigation tab showing comprehensive team activity overview in concise visual format
 - June 20, 2025. Restored My Profile page to original complete format with activity history, search functionality, and performance summary
 - June 20, 2025. Updated system to show monetary values to all contributors for their own activities on profile page only, removing approver-only restriction while keeping dashboard focused on points
+- June 20, 2025. Implemented comprehensive encashment system allowing users to convert points to cash at ₹100 per point with request submission, approval workflow, and complete transaction history tracking
+- June 20, 2025. Enhanced encashment page to display detailed points breakdown showing total earned, redeemed, and balance points with corresponding monetary values for complete transparency
 ```
 
 ## User Preferences

@@ -191,6 +191,10 @@ export type EncashmentRequestWithDetails = EncashmentRequest & {
 export type UserStats = {
   totalPoints: number;
   totalEarnings: number;
+  totalPointsEarned: number;
+  totalEarningsEarned: number;
+  redeemedPoints: number;
+  redeemedValue: number;
   monthlyPoints: number;
   monthlyEarnings: number;
   pendingPoints: number;
