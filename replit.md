@@ -174,6 +174,7 @@ Changelog:
 - June 20, 2025. Added first-time login onboarding flow prompting new users to enter name and designation when logging in without profile information, with direct profile setup bypassing approval workflow for initial registration
 - June 20, 2025. Removed approval system for profile changes - users can now update their name, designation, and profile picture directly without requiring Senior Manager or Partner approval
 - June 20, 2025. Cleaned up database by removing somya.dco@gmail.com user account (ID: 44070421) from system
+- June 20, 2025. Enhanced Dashboard with personalized welcome section displaying user's name, designation, and profile picture, and updated Profile edit dialog button text from "Submit for Approval" to "Save" to reflect direct update functionality
 ```
 
 ## User Preferences

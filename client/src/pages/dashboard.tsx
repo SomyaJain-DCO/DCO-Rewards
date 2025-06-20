@@ -92,6 +92,33 @@ export default function Dashboard() {
 
   return (
     <div className="space-y-8">
+      {/* Welcome Section */}
+      <div className="bg-white rounded-lg border p-6">
+        <div className="flex items-center space-x-4">
+          {user?.profileImageUrl ? (
+            <img
+              src={user.profileImageUrl}
+              alt="Profile"
+              className="w-16 h-16 rounded-full object-cover border-2 border-gray-200"
+            />
+          ) : (
+            <div className="w-16 h-16 bg-primary/10 rounded-full flex items-center justify-center">
+              <span className="text-2xl font-semibold text-primary">
+                {user?.firstName?.[0] || user?.email?.[0]?.toUpperCase()}
+              </span>
+            </div>
+          )}
+          <div>
+            <h1 className="text-2xl font-bold text-gray-900">
+              Welcome, {user?.firstName ? `${user.firstName} ${user.lastName || ''}`.trim() : user?.email}
+            </h1>
+            {user?.designation && (
+              <p className="text-gray-600 text-lg">{user.designation}</p>
+            )}
+          </div>
+        </div>
+      </div>
+
       {/* Stats Cards */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
         {userRole === 'approver' ? (

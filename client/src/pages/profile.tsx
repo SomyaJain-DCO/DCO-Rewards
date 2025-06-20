@@ -375,7 +375,7 @@ export default function Profile() {
               <DialogHeader>
                 <DialogTitle>Edit Profile Information</DialogTitle>
                 <DialogDescription>
-                  Update your name and designation. Changes require approval from Senior Manager or Partner.
+                  Update your name and designation. Changes will be applied immediately.
                 </DialogDescription>
               </DialogHeader>
               <div className="grid gap-4 py-4">
@@ -454,7 +454,7 @@ export default function Profile() {
                   onClick={handleProfileSubmit}
                   disabled={updateProfileMutation.isPending}
                 >
-                  {updateProfileMutation.isPending ? "Submitting..." : "Submit for Approval"}
+                  {updateProfileMutation.isPending ? "Saving..." : "Save"}
                 </Button>
               </DialogFooter>
             </DialogContent>
