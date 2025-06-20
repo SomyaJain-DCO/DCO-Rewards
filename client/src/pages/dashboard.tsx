@@ -90,7 +90,7 @@ export default function Dashboard() {
         />
         <StatsCard
           title="Pending Approval"
-          value={`${stats?.pendingActivities || 0} activities`}
+          value={stats?.pendingActivities || 0}
           subtitle={`${stats?.pendingPoints || 0} points pending`}
           icon={Clock}
           iconColor="text-yellow-600"
