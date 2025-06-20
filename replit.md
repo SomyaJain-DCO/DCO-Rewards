@@ -161,6 +161,7 @@ Changelog:
 - June 20, 2025. Completed branding update by replacing remaining "Team Rewards Dashboard" references with "DCo Rewards Dashboard" and removed subtitle
 - June 20, 2025. Implemented role-based dashboard statistics - approvers view team-focused metrics instead of personal stats with updated labels: "Total Points Awarded" and clearer monthly point descriptions
 - June 20, 2025. Enhanced dashboard to display both activity counts and reward points with cleaner numerical format, removing redundant "activities" text for streamlined presentation
+- June 20, 2025. Updated dashboard title from "Total Points Awarded" to "Total Contributions" for better team-focused messaging
 ```
 
 ## User Preferences

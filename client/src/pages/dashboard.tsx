@@ -97,7 +97,7 @@ export default function Dashboard() {
         {userRole === 'approver' ? (
           <>
             <StatsCard
-              title="Total Points Awarded"
+              title="Total Contributions"
               value={teamSummary?.totalActivities || 0}
               subtitle={`${teamSummary?.totalTeamPoints || 0} points awarded so far`}
               icon={Trophy}
