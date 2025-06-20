@@ -99,7 +99,14 @@ export default function Profile() {
       setEditDesignation("");
       setProfileImage(null);
       setProfileImagePreview(null);
+      // Invalidate all user-related queries to update Dashboard and other components
       queryClient.invalidateQueries({ queryKey: ["/api/auth/user"] });
+      // Force immediate refetch to update all components including Dashboard
+      queryClient.refetchQueries({ queryKey: ["/api/auth/user"] });
+      // Small delay to ensure UI updates
+      setTimeout(() => {
+        queryClient.invalidateQueries({ queryKey: ["/api/auth/user"] });
+      }, 100);
     },
     onError: (error) => {
       if (isUnauthorizedError(error)) {
