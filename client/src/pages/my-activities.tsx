@@ -1,16 +1,24 @@
 import { useQuery } from "@tanstack/react-query";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { Calendar, FileText, User, Trophy, Clock } from "lucide-react";
+import { Input } from "@/components/ui/input";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { Calendar, FileText, User, Trophy, Clock, Search, X } from "lucide-react";
 import { useAuth } from "@/hooks/useAuth";
 import { useLocation } from "wouter";
 import { format } from "date-fns";
+import { useState, useMemo } from "react";
 
 type ActivityFilter = "all" | "monthly" | "pending";
 
 export default function MyActivities() {
   const { user } = useAuth();
   const [location] = useLocation();
+  
+  // Search and filter state
+  const [searchTerm, setSearchTerm] = useState("");
+  const [yearFilter, setYearFilter] = useState("");
+  const [categoryFilter, setCategoryFilter] = useState("");
   
   // Get filter from URL search params
   const searchParams = new URLSearchParams(window.location.search);
@@ -23,18 +31,55 @@ export default function MyActivities() {
     enabled: !!user?.id,
   });
 
-  const filteredActivities = activities?.filter((activity: any) => {
-    if (filter === "pending") {
-      return activity.status === "pending";
-    }
-    if (filter === "monthly") {
-      const activityDate = new Date(activity.createdAt);
-      const currentMonth = new Date().getMonth();
-      const currentYear = new Date().getFullYear();
-      return activityDate.getMonth() === currentMonth && activityDate.getFullYear() === currentYear;
-    }
-    return true; // "all"
-  }) || [];
+  // Get unique years and categories for filter options
+  const availableYears = useMemo(() => {
+    if (!activities) return [];
+    const years = [...new Set(activities.map((activity: any) => 
+      new Date(activity.activityDate).getFullYear().toString()
+    ))].sort((a, b) => b.localeCompare(a));
+    return years;
+  }, [activities]);
+
+  const availableCategories = useMemo(() => {
+    if (!activities) return [];
+    const categories = [...new Set(activities.map((activity: any) => activity.category.name))].sort();
+    return categories;
+  }, [activities]);
+
+  const filteredActivities = useMemo(() => {
+    if (!activities) return [];
+    
+    return activities.filter((activity: any) => {
+      // Status filter (from URL params)
+      if (filter === "pending" && activity.status !== "pending") return false;
+      if (filter === "monthly") {
+        const activityDate = new Date(activity.createdAt);
+        const currentMonth = new Date().getMonth();
+        const currentYear = new Date().getFullYear();
+        if (activityDate.getMonth() !== currentMonth || activityDate.getFullYear() !== currentYear) return false;
+      }
+
+      // Search term filter (title, description, category)
+      if (searchTerm) {
+        const searchLower = searchTerm.toLowerCase();
+        const matchesTitle = activity.title.toLowerCase().includes(searchLower);
+        const matchesDescription = activity.description.toLowerCase().includes(searchLower);
+        const matchesCategory = activity.category.name.toLowerCase().includes(searchLower);
+        if (!matchesTitle && !matchesDescription && !matchesCategory) return false;
+      }
+
+      // Year filter
+      if (yearFilter) {
+        const activityYear = new Date(activity.activityDate).getFullYear().toString();
+        if (activityYear !== yearFilter) return false;
+      }
+
+      // Category filter
+      if (categoryFilter && activity.category.name !== categoryFilter) return false;
+
+      return true;
+    });
+  }, [activities, filter, searchTerm, yearFilter, categoryFilter]);
 
   const getStatusBadge = (status: string) => {
     switch (status) {
@@ -68,6 +113,12 @@ export default function MyActivities() {
     );
   }
 
+  const clearFilters = () => {
+    setSearchTerm("");
+    setYearFilter("");
+    setCategoryFilter("");
+  };
+
   return (
     <div className="space-y-6">
       <div className="flex items-center justify-between">
@@ -77,19 +128,92 @@ export default function MyActivities() {
         </div>
       </div>
 
+      {/* Search and Filter Section */}
+      <Card>
+        <CardContent className="p-6">
+          <div className="space-y-4">
+            <div className="flex flex-col sm:flex-row gap-4">
+              {/* Search Input */}
+              <div className="flex-1">
+                <div className="relative">
+                  <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 h-4 w-4" />
+                  <Input
+                    placeholder="Search by title, description, or category..."
+                    value={searchTerm}
+                    onChange={(e) => setSearchTerm(e.target.value)}
+                    className="pl-10"
+                  />
+                </div>
+              </div>
+              
+              {/* Year Filter */}
+              <Select value={yearFilter} onValueChange={setYearFilter}>
+                <SelectTrigger className="w-full sm:w-40">
+                  <SelectValue placeholder="Filter by year" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="">All years</SelectItem>
+                  {availableYears.map((year) => (
+                    <SelectItem key={year} value={year}>
+                      {year}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+              
+              {/* Category Filter */}
+              <Select value={categoryFilter} onValueChange={setCategoryFilter}>
+                <SelectTrigger className="w-full sm:w-48">
+                  <SelectValue placeholder="Filter by category" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="">All categories</SelectItem>
+                  {availableCategories.map((category) => (
+                    <SelectItem key={category} value={category}>
+                      {category}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+              
+              {/* Clear Filters Button */}
+              {(searchTerm || yearFilter || categoryFilter) && (
+                <button
+                  onClick={clearFilters}
+                  className="flex items-center gap-2 px-3 py-2 text-sm text-gray-600 hover:text-gray-800 border border-gray-300 rounded-md hover:bg-gray-50"
+                >
+                  <X className="h-4 w-4" />
+                  Clear
+                </button>
+              )}
+            </div>
+          </div>
+        </CardContent>
+      </Card>
+
       {filteredActivities.length === 0 ? (
         <Card>
           <CardContent className="flex flex-col items-center justify-center py-12">
             <FileText className="h-12 w-12 text-gray-400 mb-4" />
             <h3 className="text-lg font-medium text-gray-900 mb-2">No activities found</h3>
             <p className="text-gray-500 text-center">
-              {filter === "pending" 
+              {searchTerm || yearFilter || categoryFilter
+                ? "No activities match your search criteria. Try adjusting your filters."
+                : filter === "pending" 
                 ? "You don't have any pending activities."
                 : filter === "monthly"
                 ? "You haven't submitted any activities this month."
                 : "You haven't submitted any activities yet."
               }
             </p>
+            {(searchTerm || yearFilter || categoryFilter) && (
+              <button
+                onClick={clearFilters}
+                className="mt-3 text-sm text-blue-600 hover:text-blue-800"
+              >
+                Clear all filters
+              </button>
+            )}
           </CardContent>
         </Card>
       ) : (
