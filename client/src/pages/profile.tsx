@@ -1,17 +1,24 @@
 import { useQuery } from "@tanstack/react-query";
 import { useAuth } from "@/hooks/useAuth";
-import { useEffect } from "react";
+import { useEffect, useState, useMemo } from "react";
 import { useToast } from "@/hooks/use-toast";
 import { isUnauthorizedError } from "@/lib/authUtils";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
+import { Input } from "@/components/ui/input";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import ActivityCard from "@/components/activity-card";
-import { User, Calendar, Trophy, DollarSign } from "lucide-react";
+import { User, Calendar, Trophy, DollarSign, Search, X } from "lucide-react";
 
 export default function Profile() {
   const { toast } = useToast();
   const { user, isAuthenticated, isLoading } = useAuth();
+  
+  // Search and filter state for activity history
+  const [searchTerm, setSearchTerm] = useState("");
+  const [yearFilter, setYearFilter] = useState("all");
+  const [monthFilter, setMonthFilter] = useState("all");
 
   const { data: stats, isLoading: statsLoading } = useQuery({
     queryKey: ["/api/stats"],
@@ -22,6 +29,69 @@ export default function Profile() {
     queryKey: ["/api/activities/my"],
     enabled: isAuthenticated,
   });
+
+  // Get unique years and months for filter options
+  const availableYears = useMemo(() => {
+    if (!activities) return [];
+    const years = [...new Set(activities.map((activity: any) => 
+      new Date(activity.activityDate).getFullYear().toString()
+    ))].sort((a, b) => b.localeCompare(a));
+    return years;
+  }, [activities]);
+
+  const availableMonths = useMemo(() => {
+    const months = [
+      { value: "01", label: "January" },
+      { value: "02", label: "February" },
+      { value: "03", label: "March" },
+      { value: "04", label: "April" },
+      { value: "05", label: "May" },
+      { value: "06", label: "June" },
+      { value: "07", label: "July" },
+      { value: "08", label: "August" },
+      { value: "09", label: "September" },
+      { value: "10", label: "October" },
+      { value: "11", label: "November" },
+      { value: "12", label: "December" }
+    ];
+    return months;
+  }, []);
+
+  // Filter activities based on search criteria
+  const filteredActivities = useMemo(() => {
+    if (!activities) return [];
+    
+    return activities.filter((activity: any) => {
+      // Search term filter (title, description, category)
+      if (searchTerm) {
+        const searchLower = searchTerm.toLowerCase();
+        const matchesTitle = activity.title.toLowerCase().includes(searchLower);
+        const matchesDescription = activity.description.toLowerCase().includes(searchLower);
+        const matchesCategory = activity.category.name.toLowerCase().includes(searchLower);
+        if (!matchesTitle && !matchesDescription && !matchesCategory) return false;
+      }
+
+      // Year filter
+      if (yearFilter && yearFilter !== "all") {
+        const activityYear = new Date(activity.activityDate).getFullYear().toString();
+        if (activityYear !== yearFilter) return false;
+      }
+
+      // Month filter
+      if (monthFilter && monthFilter !== "all") {
+        const activityMonth = (new Date(activity.activityDate).getMonth() + 1).toString().padStart(2, '0');
+        if (activityMonth !== monthFilter) return false;
+      }
+
+      return true;
+    });
+  }, [activities, searchTerm, yearFilter, monthFilter]);
+
+  const clearFilters = () => {
+    setSearchTerm("");
+    setYearFilter("all");
+    setMonthFilter("all");
+  };
 
   useEffect(() => {
     if (!isLoading && !isAuthenticated) {
@@ -207,6 +277,72 @@ export default function Profile() {
           </div>
         </CardHeader>
         <CardContent>
+          {/* Search and Filter Interface */}
+          <div className="mb-6 space-y-4">
+            <div className="flex flex-col lg:flex-row gap-4">
+              {/* Search Input */}
+              <div className="flex-1 relative">
+                <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 h-4 w-4" />
+                <Input
+                  placeholder="Search activities by title, description, or category..."
+                  value={searchTerm}
+                  onChange={(e) => setSearchTerm(e.target.value)}
+                  className="pl-10"
+                />
+              </div>
+              
+              {/* Year Filter */}
+              <Select value={yearFilter} onValueChange={setYearFilter}>
+                <SelectTrigger className="w-full lg:w-[140px]">
+                  <SelectValue placeholder="Year" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="all">All Years</SelectItem>
+                  {availableYears.map((year) => (
+                    <SelectItem key={year} value={year}>
+                      {year}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+              
+              {/* Month Filter */}
+              <Select value={monthFilter} onValueChange={setMonthFilter}>
+                <SelectTrigger className="w-full lg:w-[140px]">
+                  <SelectValue placeholder="Month" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="all">All Months</SelectItem>
+                  {availableMonths.map((month) => (
+                    <SelectItem key={month.value} value={month.value}>
+                      {month.label}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+              
+              {/* Clear Filters Button */}
+              {(searchTerm || yearFilter !== "all" || monthFilter !== "all") && (
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={clearFilters}
+                  className="flex items-center gap-2"
+                >
+                  <X className="h-4 w-4" />
+                  Clear
+                </Button>
+              )}
+            </div>
+
+            {/* Results Summary */}
+            {(searchTerm || yearFilter !== "all" || monthFilter !== "all") && (
+              <div className="text-sm text-gray-600">
+                Showing {filteredActivities.length} of {activities?.length || 0} activities
+              </div>
+            )}
+          </div>
+
           {activitiesLoading ? (
             <div className="space-y-4">
               {[...Array(3)].map((_, i) => (
@@ -225,9 +361,9 @@ export default function Profile() {
                 </div>
               ))}
             </div>
-          ) : activities && activities.length > 0 ? (
+          ) : filteredActivities && filteredActivities.length > 0 ? (
             <div className="space-y-4">
-              {activities.map((activity: any) => (
+              {filteredActivities.map((activity: any) => (
                 <ActivityCard
                   key={activity.id}
                   activity={activity}
@@ -235,6 +371,10 @@ export default function Profile() {
                   hideUserName={true}
                 />
               ))}
+            </div>
+          ) : activities && activities.length > 0 ? (
+            <div className="text-center py-8 text-gray-500">
+              <p>No activities match your search criteria. Try adjusting your filters.</p>
             </div>
           ) : (
             <div className="text-center py-8 text-gray-500">

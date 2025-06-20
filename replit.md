@@ -139,6 +139,7 @@ Changelog:
 - June 20, 2025. Added comprehensive search functionality to My Activities with keyword, year, and category filters
 - June 20, 2025. Enhanced Points Table with top 3 ranks prominently displayed and collapsible "Others" section
 - June 20, 2025. Replaced "Recent Team Activities" with "Recent Contributions" showing only 3 items with "View All" link
+- June 20, 2025. Added search functionality to Profile page activity history with keyword, year, and month filters
 ```
 
 ## User Preferences
