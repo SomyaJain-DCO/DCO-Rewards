@@ -1,7 +1,7 @@
 import type { Express, Request, Response } from "express";
 import { createServer, type Server } from "http";
 import { storage } from "./storage";
-import { setupAuth, isAuthenticated } from "./replitAuth";
+import { setupAuth, isAuthenticated, allowPendingUsers } from "./replitAuth";
 import { insertActivitySchema, approveActivitySchema, insertEncashmentRequestSchema, approveEncashmentRequestSchema, users, activities, encashmentRequests } from "@shared/schema";
 import { db } from "./db";
 import { eq } from "drizzle-orm";
@@ -25,8 +25,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // Seed activity categories on startup
   await storage.seedActivityCategories();
 
-  // Auth routes
-  app.get('/api/auth/user', isAuthenticated, async (req: any, res: any) => {
+  // Auth routes - allow pending users to get their info for profile completion
+  app.get('/api/auth/user', allowPendingUsers, async (req: any, res: any) => {
     try {
       const userId = req.user?.claims.sub;
       if (!userId) return res.status(401).json({ message: "Unauthorized" });
