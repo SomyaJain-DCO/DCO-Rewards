@@ -29,7 +29,20 @@ export default function Profile() {
   // Mutation for updating designation
   const updateDesignationMutation = useMutation({
     mutationFn: async (designation: string) => {
-      return await apiRequest("/api/profile/designation", "PUT", { designation });
+      const response = await fetch("/api/profile/designation", {
+        method: "PUT",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({ designation }),
+      });
+      
+      if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(errorData.message || "Failed to update designation");
+      }
+      
+      return await response.json();
     },
     onSuccess: () => {
       toast({
