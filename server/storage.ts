@@ -3,7 +3,6 @@ import {
   activities,
   activityCategories,
   encashmentRequests,
-  profileChangeRequests,
   type User,
   type UpsertUser,
   type Activity,
@@ -16,10 +15,6 @@ import {
   type ApproveEncashmentRequest,
   type ActivityWithDetails,
   type EncashmentRequestWithDetails,
-  type ProfileChangeRequest,
-  type InsertProfileChangeRequest,
-  type ApproveProfileChangeRequest,
-  type ProfileChangeRequestWithDetails,
   type UserStats,
 } from "@shared/schema";
 import { db } from "./db";
@@ -66,64 +61,13 @@ export interface IStorage {
   getEncashmentRequestsByUser(userId: string): Promise<EncashmentRequestWithDetails[]>;
   getPendingEncashmentRequests(): Promise<EncashmentRequestWithDetails[]>;
   approveEncashmentRequest(approval: ApproveEncashmentRequest, approverId: string): Promise<EncashmentRequest>;
-  
-  // Profile change request operations
-  createProfileChangeRequest(request: InsertProfileChangeRequest): Promise<ProfileChangeRequest>;
-  getPendingProfileChangeRequests(): Promise<ProfileChangeRequestWithDetails[]>;
-  approveProfileChangeRequest(approval: ApproveProfileChangeRequest, approverId: string): Promise<ProfileChangeRequest>;
 }
 
 export class DatabaseStorage implements IStorage {
-  private fallbackMode = false;
-  private memoryStore = new Map<string, any>();
-  private nextId = 1;
-
-  constructor() {
-    // Start in fallback mode to avoid connection issues
-    this.fallbackMode = true;
-    this.initializeFallbackData();
-    console.log('Storage initialized in fallback mode');
-  }
-
-  private initializeFallbackData() {
-    // Initialize with default admin user
-    const adminUser = {
-      id: 'admin-user-1',
-      email: 'admin@dhadda.com',
-      firstName: 'System',
-      lastName: 'Admin',
-      designation: 'Partner',
-      role: 'approver',
-      status: 'approved',
-      createdAt: new Date(),
-      updatedAt: new Date()
-    };
-    this.memoryStore.set('user:admin-user-1', adminUser);
-    
-    // Initialize activity categories
-    const categories = [
-      { id: 1, name: 'Research & Analysis', points: 10, monetaryValue: 1000 },
-      { id: 2, name: 'Client Presentation', points: 15, monetaryValue: 1500 },
-      { id: 3, name: 'Training & Development', points: 8, monetaryValue: 800 },
-      { id: 4, name: 'Process Improvement', points: 12, monetaryValue: 1200 },
-      { id: 5, name: 'Documentation', points: 6, monetaryValue: 600 }
-    ];
-    categories.forEach(cat => this.memoryStore.set(`category:${cat.id}`, cat));
-  }
   // User operations
   async getUser(id: string): Promise<User | undefined> {
-    if (this.fallbackMode) {
-      return this.memoryStore.get(`user:${id}`);
-    }
-    try {
-      const [user] = await db.select().from(users).where(eq(users.id, id));
-      return user;
-    } catch (error) {
-      console.warn('Database query failed, switching to fallback mode');
-      this.fallbackMode = true;
-      this.initializeFallbackData();
-      return this.memoryStore.get(`user:${id}`);
-    }
+    const [user] = await db.select().from(users).where(eq(users.id, id));
+    return user;
   }
 
   async upsertUser(userData: UpsertUser): Promise<User> {
@@ -198,52 +142,31 @@ export class DatabaseStorage implements IStorage {
 
   // Activity category operations
   async getActivityCategories(): Promise<ActivityCategory[]> {
-    if (this.fallbackMode) {
-      const categories = [];
-      for (let i = 1; i <= 5; i++) {
-        const cat = this.memoryStore.get(`category:${i}`);
-        if (cat) categories.push(cat);
-      }
-      return categories;
-    }
-    
-    try {
-      return await db.select().from(activityCategories).orderBy(activityCategories.id);
-    } catch (error) {
-      this.fallbackMode = true;
-      this.initializeFallbackData();
-      const categories = [];
-      for (let i = 1; i <= 5; i++) {
-        const cat = this.memoryStore.get(`category:${i}`);
-        if (cat) categories.push(cat);
-      }
-      return categories;
-    }
+    return await db.select().from(activityCategories).orderBy(activityCategories.id);
   }
 
   async seedActivityCategories(): Promise<void> {
-    if (this.fallbackMode) {
-      console.log('Using fallback mode - categories already initialized');
-      return;
-    }
-    
-    try {
-      const categories = [
-        { name: "Article published on third-party websites", points: 10, monetaryValue: 1000 },
-        { name: "Articles published on LinkedIn", points: 8, monetaryValue: 800 },
-        { name: "Article for Newsletter", points: 7, monetaryValue: 700 },
-        { name: "Article in Journals (ICAI, BCAS, CTC etc)", points: 15, monetaryValue: 1500 },
-        { name: "Writing a Book", points: 100, monetaryValue: 10000 }
-      ];
+    const categories = [
+      { name: "Article published on third-party websites", points: 10, monetaryValue: 1000, description: "Articles published on external websites" },
+      { name: "Articles published on LinkedIn", points: 8, monetaryValue: 800, description: "Professional articles shared on LinkedIn" },
+      { name: "Article for Newsletter", points: 7, monetaryValue: 700, description: "Articles written for company newsletter" },
+      { name: "Article in Journals (ICAI, BCAS, CTC etc)", points: 15, monetaryValue: 1500, description: "Articles published in professional journals" },
+      { name: "Writing a Book", points: 100, monetaryValue: 10000, description: "Authoring a complete book" },
+      { name: "Contribution other than Article in Newsletter (DCoD)", points: 3, monetaryValue: 300, description: "Other newsletter contributions" },
+      { name: "Technical Contribution other than Article on LinkedIn", points: 1, monetaryValue: 100, description: "Technical posts and contributions on LinkedIn" },
+      { name: "Taking Session in Office", points: 6, monetaryValue: 600, description: "Conducting internal training sessions" },
+      { name: "Taking Session at ICAI/ICSI/ICWAI/other bodies (Virtual/Physical)", points: 10, monetaryValue: 1000, description: "Sessions at professional bodies" },
+      { name: "Taking Session of clients - Virtual", points: 8, monetaryValue: 800, description: "Virtual client training sessions" },
+      { name: "Monitoring/Mentoring Internal Training Sessions", points: 2, monetaryValue: 200, description: "Supervising internal training programs" },
+      { name: "Attending RRC - Subject to sharing of summary & internal notes", points: 15, monetaryValue: 1500, description: "Regional Review Committee attendance with notes" },
+      { name: "Attending Study Circle Meetings - Subject to sharing of summary & internal notes", points: 5, monetaryValue: 500, description: "Study circle participation with notes" },
+      { name: "Attending Other Conferences - Subject to sharing of summary & internal notes", points: 5, monetaryValue: 500, description: "Conference attendance with notes" },
+    ];
 
-      const existingCategories = await this.getActivityCategories();
-      if (existingCategories.length === 0) {
-        await db.insert(activityCategories).values(categories);
-      }
-    } catch (error) {
-      console.log('Database seeding failed, using fallback mode');
-      this.fallbackMode = true;
-      this.initializeFallbackData();
+    // Check if categories already exist
+    const existingCategories = await this.getActivityCategories();
+    if (existingCategories.length === 0) {
+      await db.insert(activityCategories).values(categories);
     }
   }
 
@@ -857,104 +780,6 @@ export class DatabaseStorage implements IStorage {
       .returning();
 
     return encashmentRequest;
-  }
-
-  async createProfileChangeRequest(request: InsertProfileChangeRequest): Promise<ProfileChangeRequest> {
-    const [profileChangeRequest] = await db
-      .insert(profileChangeRequests)
-      .values(request)
-      .returning();
-    return profileChangeRequest;
-  }
-
-  async getPendingProfileChangeRequests(): Promise<ProfileChangeRequestWithDetails[]> {
-    return await db
-      .select({
-        id: profileChangeRequests.id,
-        userId: profileChangeRequests.userId,
-        requestedFirstName: profileChangeRequests.requestedFirstName,
-        requestedLastName: profileChangeRequests.requestedLastName,
-        requestedDesignation: profileChangeRequests.requestedDesignation,
-        currentFirstName: profileChangeRequests.currentFirstName,
-        currentLastName: profileChangeRequests.currentLastName,
-        currentDesignation: profileChangeRequests.currentDesignation,
-        status: profileChangeRequests.status,
-        approvedBy: profileChangeRequests.approvedBy,
-        approvedAt: profileChangeRequests.approvedAt,
-        rejectionReason: profileChangeRequests.rejectionReason,
-        createdAt: profileChangeRequests.createdAt,
-        updatedAt: profileChangeRequests.updatedAt,
-        user: {
-          id: users.id,
-          email: users.email,
-          firstName: users.firstName,
-          lastName: users.lastName,
-          profileImageUrl: users.profileImageUrl,
-          role: users.role,
-          designation: users.designation,
-          department: users.department,
-          createdAt: users.createdAt,
-          updatedAt: users.updatedAt,
-        },
-        approver: {
-          id: sql`approver.id`,
-          email: sql`approver.email`,
-          firstName: sql`approver.first_name`,
-          lastName: sql`approver.last_name`,
-          profileImageUrl: sql`approver.profile_image_url`,
-          role: sql`approver.role`,
-          designation: sql`approver.designation`,
-          department: sql`approver.department`,
-          createdAt: sql`approver.created_at`,
-          updatedAt: sql`approver.updated_at`,
-        },
-      })
-      .from(profileChangeRequests)
-      .innerJoin(users, eq(profileChangeRequests.userId, users.id))
-      .leftJoin(sql`${users} as approver`, sql`${profileChangeRequests.approvedBy} = approver.id`)
-      .where(eq(profileChangeRequests.status, "pending"))
-      .orderBy(desc(profileChangeRequests.createdAt)) as ProfileChangeRequestWithDetails[];
-  }
-
-  async approveProfileChangeRequest(approval: ApproveProfileChangeRequest, approverId: string): Promise<ProfileChangeRequest> {
-    const [approvedRequest] = await db
-      .update(profileChangeRequests)
-      .set({
-        status: approval.status,
-        approvedBy: approverId,
-        approvedAt: new Date(),
-        rejectionReason: approval.rejectionReason,
-        updatedAt: new Date(),
-      })
-      .where(eq(profileChangeRequests.id, approval.id))
-      .returning();
-
-    // If approved, update the user's profile
-    if (approval.status === 'approved') {
-      const request = await db
-        .select()
-        .from(profileChangeRequests)
-        .where(eq(profileChangeRequests.id, approval.id))
-        .limit(1);
-
-      if (request.length > 0) {
-        const changeRequest = request[0];
-        const role = changeRequest.requestedDesignation === 'Partner' ? 'approver' : 'contributor';
-        
-        await db
-          .update(users)
-          .set({
-            firstName: changeRequest.requestedFirstName,
-            lastName: changeRequest.requestedLastName,
-            designation: changeRequest.requestedDesignation,
-            role: role,
-            updatedAt: new Date(),
-          })
-          .where(eq(users.id, changeRequest.userId));
-      }
-    }
-
-    return approvedRequest;
   }
 }
 
