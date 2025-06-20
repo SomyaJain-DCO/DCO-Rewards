@@ -124,7 +124,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       }
 
       // Determine role based on designation
-      const role = designation.trim() === 'Partner' ? 'approver' : 'contributor';
+      const role = (designation.trim() === 'Partner' || designation.trim() === 'Senior Manager') ? 'approver' : 'contributor';
 
       // Update user profile directly for first-time setup
       const updateData = {
@@ -190,7 +190,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       }
 
       // Determine role based on designation
-      const role = designation.trim() === 'Partner' ? 'approver' : 'contributor';
+      const role = (designation.trim() === 'Partner' || designation.trim() === 'Senior Manager') ? 'approver' : 'contributor';
 
       // Update user profile directly
       const updateData: any = {
