@@ -148,6 +148,7 @@ Changelog:
 - June 20, 2025. Added comprehensive search and export functionality to All Activities page with real-time filtering and CSV download capabilities
 - June 20, 2025. Removed activity history section from My Profile page to simplify interface and focus on performance summary metrics
 - June 20, 2025. Removed activity overview section from My Profile page, keeping only essential user information and performance metrics
+- June 20, 2025. Enhanced All Activities page to display activity descriptions alongside titles for better context and information
 ```
 
 ## User Preferences
