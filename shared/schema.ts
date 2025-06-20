@@ -66,10 +66,27 @@ export const activities = pgTable("activities", {
   updatedAt: timestamp("updated_at").defaultNow(),
 });
 
+// Encashment requests table
+export const encashmentRequests = pgTable("encashment_requests", {
+  id: serial("id").primaryKey(),
+  userId: varchar("user_id").notNull().references(() => users.id),
+  pointsRequested: integer("points_requested").notNull(),
+  monetaryValue: integer("monetary_value").notNull(),
+  status: varchar("status").notNull().default("pending"), // pending, approved, rejected
+  approvedBy: varchar("approved_by").references(() => users.id),
+  approvedAt: timestamp("approved_at"),
+  rejectionReason: text("rejection_reason"),
+  paymentDetails: text("payment_details"),
+  createdAt: timestamp("created_at").defaultNow(),
+  updatedAt: timestamp("updated_at").defaultNow(),
+});
+
 // Relations
 export const usersRelations = relations(users, ({ many }) => ({
   activities: many(activities),
   approvedActivities: many(activities, { relationName: "approver" }),
+  encashmentRequests: many(encashmentRequests),
+  approvedEncashmentRequests: many(encashmentRequests, { relationName: "encashmentApprover" }),
 }));
 
 export const activitiesRelations = relations(activities, ({ one }) => ({
@@ -90,6 +107,18 @@ export const activitiesRelations = relations(activities, ({ one }) => ({
 
 export const activityCategoriesRelations = relations(activityCategories, ({ many }) => ({
   activities: many(activities),
+}));
+
+export const encashmentRequestsRelations = relations(encashmentRequests, ({ one }) => ({
+  user: one(users, {
+    fields: [encashmentRequests.userId],
+    references: [users.id],
+  }),
+  approver: one(users, {
+    fields: [encashmentRequests.approvedBy],
+    references: [users.id],
+    relationName: "encashmentApprover",
+  }),
 }));
 
 // Zod schemas
@@ -120,6 +149,19 @@ export const approveActivitySchema = z.object({
   rejectionReason: z.string().optional(),
 });
 
+export const insertEncashmentRequestSchema = createInsertSchema(encashmentRequests).omit({
+  id: true,
+  createdAt: true,
+  updatedAt: true,
+});
+
+export const approveEncashmentRequestSchema = z.object({
+  id: z.number(),
+  status: z.enum(["approved", "rejected"]),
+  rejectionReason: z.string().optional(),
+  paymentDetails: z.string().optional(),
+});
+
 // Types
 export type UpsertUser = z.infer<typeof insertUserSchema>;
 export type User = typeof users.$inferSelect;
@@ -128,11 +170,20 @@ export type ActivityCategory = typeof activityCategories.$inferSelect;
 export type InsertActivity = z.infer<typeof insertActivitySchema>;
 export type InsertActivityCategory = z.infer<typeof insertActivityCategorySchema>;
 export type ApproveActivity = z.infer<typeof approveActivitySchema>;
+export type EncashmentRequest = typeof encashmentRequests.$inferSelect;
+export type InsertEncashmentRequest = z.infer<typeof insertEncashmentRequestSchema>;
+export type ApproveEncashmentRequest = z.infer<typeof approveEncashmentRequestSchema>;
 
 // Activity with relations
 export type ActivityWithDetails = Activity & {
   user: User;
   category: ActivityCategory;
+  approver?: User;
+};
+
+// Encashment request with relations
+export type EncashmentRequestWithDetails = EncashmentRequest & {
+  user: User;
   approver?: User;
 };
 

@@ -2,7 +2,7 @@ import type { Express, Request, Response } from "express";
 import { createServer, type Server } from "http";
 import { storage } from "./storage";
 import { setupAuth, isAuthenticated } from "./replitAuth";
-import { insertActivitySchema, approveActivitySchema } from "@shared/schema";
+import { insertActivitySchema, approveActivitySchema, insertEncashmentRequestSchema, approveEncashmentRequestSchema } from "@shared/schema";
 
 interface AuthenticatedRequest extends Request {
   user?: {
@@ -259,6 +259,83 @@ export async function registerRoutes(app: Express): Promise<Server> {
     } catch (error) {
       console.error("Error fetching user stats:", error);
       res.status(500).json({ message: "Failed to fetch user stats" });
+    }
+  });
+
+  // Encashment request routes
+  // Create encashment request
+  app.post('/api/encashment-requests', isAuthenticated, async (req: any, res: any) => {
+    try {
+      const userId = req.user?.claims.sub;
+      if (!userId) return res.status(401).json({ message: "Unauthorized" });
+
+      const validatedData = insertEncashmentRequestSchema.parse({
+        ...req.body,
+        userId,
+      });
+
+      const encashmentRequest = await storage.createEncashmentRequest(validatedData);
+      res.status(201).json(encashmentRequest);
+    } catch (error) {
+      console.error("Error creating encashment request:", error);
+      res.status(500).json({ message: "Failed to create encashment request" });
+    }
+  });
+
+  // Get user's encashment requests
+  app.get('/api/encashment-requests', isAuthenticated, async (req: any, res: any) => {
+    try {
+      const userId = req.user?.claims.sub;
+      if (!userId) return res.status(401).json({ message: "Unauthorized" });
+
+      const encashmentRequests = await storage.getEncashmentRequestsByUser(userId);
+      res.json(encashmentRequests);
+    } catch (error) {
+      console.error("Error fetching encashment requests:", error);
+      res.status(500).json({ message: "Failed to fetch encashment requests" });
+    }
+  });
+
+  // Get pending encashment requests (approvers only)
+  app.get('/api/encashment-requests/pending', isAuthenticated, async (req: any, res: any) => {
+    try {
+      const userId = req.user?.claims.sub;
+      if (!userId) return res.status(401).json({ message: "Unauthorized" });
+
+      const user = await storage.getUser(userId);
+      if (user?.role !== 'approver') {
+        return res.status(403).json({ message: "Access denied. Only approvers can view pending encashment requests." });
+      }
+
+      const pendingRequests = await storage.getPendingEncashmentRequests();
+      res.json(pendingRequests);
+    } catch (error) {
+      console.error("Error fetching pending encashment requests:", error);
+      res.status(500).json({ message: "Failed to fetch pending encashment requests" });
+    }
+  });
+
+  // Approve/reject encashment request (approvers only)
+  app.put('/api/encashment-requests/:id/approve', isAuthenticated, async (req: any, res: any) => {
+    try {
+      const userId = req.user?.claims.sub;
+      if (!userId) return res.status(401).json({ message: "Unauthorized" });
+
+      const user = await storage.getUser(userId);
+      if (user?.role !== 'approver') {
+        return res.status(403).json({ message: "Access denied. Only approvers can approve encashment requests." });
+      }
+
+      const validatedData = approveEncashmentRequestSchema.parse({
+        ...req.body,
+        id: parseInt(req.params.id),
+      });
+
+      const encashmentRequest = await storage.approveEncashmentRequest(validatedData, userId);
+      res.json(encashmentRequest);
+    } catch (error) {
+      console.error("Error approving encashment request:", error);
+      res.status(500).json({ message: "Failed to approve encashment request" });
     }
   });
 

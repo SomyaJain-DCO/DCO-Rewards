@@ -12,7 +12,8 @@ import {
   Menu,
   X,
   Activity,
-  FileText
+  FileText,
+  Banknote
 } from "lucide-react";
 import { useState } from "react";
 
@@ -21,6 +22,7 @@ const navigation = [
   { name: "Submit Activity", href: "/submit-activity", icon: Plus },
   { name: "My Activities", href: "/my-activities", icon: Activity },
   { name: "All Activities", href: "/all-activities", icon: FileText },
+  { name: "Encashment", href: "/encashment", icon: Banknote },
   { name: "My Profile", href: "/profile", icon: User },
 ];
 

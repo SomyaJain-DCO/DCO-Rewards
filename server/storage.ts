@@ -2,14 +2,19 @@ import {
   users,
   activities,
   activityCategories,
+  encashmentRequests,
   type User,
   type UpsertUser,
   type Activity,
   type ActivityCategory,
+  type EncashmentRequest,
   type InsertActivity,
   type InsertActivityCategory,
   type ApproveActivity,
+  type InsertEncashmentRequest,
+  type ApproveEncashmentRequest,
   type ActivityWithDetails,
+  type EncashmentRequestWithDetails,
   type UserStats,
 } from "@shared/schema";
 import { db } from "./db";
@@ -45,6 +50,12 @@ export interface IStorage {
   getUserById(id: string): Promise<User | undefined>;
   getActivitiesByUserId(userId: string): Promise<ActivityWithDetails[]>;
   getUserStatsById(userId: string): Promise<UserStats>;
+  
+  // Encashment operations
+  createEncashmentRequest(request: InsertEncashmentRequest): Promise<EncashmentRequest>;
+  getEncashmentRequestsByUser(userId: string): Promise<EncashmentRequestWithDetails[]>;
+  getPendingEncashmentRequests(): Promise<EncashmentRequestWithDetails[]>;
+  approveEncashmentRequest(approval: ApproveEncashmentRequest, approverId: string): Promise<EncashmentRequest>;
 }
 
 export class DatabaseStorage implements IStorage {
@@ -545,6 +556,132 @@ export class DatabaseStorage implements IStorage {
 
   async getUserStatsById(userId: string): Promise<UserStats> {
     return this.getUserStats(userId);
+  }
+
+  // Encashment operations
+  async createEncashmentRequest(request: InsertEncashmentRequest): Promise<EncashmentRequest> {
+    const [encashmentRequest] = await db
+      .insert(encashmentRequests)
+      .values(request)
+      .returning();
+    return encashmentRequest;
+  }
+
+  async getEncashmentRequestsByUser(userId: string): Promise<EncashmentRequestWithDetails[]> {
+    return await db
+      .select({
+        id: encashmentRequests.id,
+        userId: encashmentRequests.userId,
+        pointsRequested: encashmentRequests.pointsRequested,
+        monetaryValue: encashmentRequests.monetaryValue,
+        status: encashmentRequests.status,
+        approvedBy: encashmentRequests.approvedBy,
+        approvedAt: encashmentRequests.approvedAt,
+        rejectionReason: encashmentRequests.rejectionReason,
+        paymentDetails: encashmentRequests.paymentDetails,
+        createdAt: encashmentRequests.createdAt,
+        updatedAt: encashmentRequests.updatedAt,
+        user: {
+          id: users.id,
+          email: users.email,
+          firstName: users.firstName,
+          lastName: users.lastName,
+          profileImageUrl: users.profileImageUrl,
+          role: users.role,
+          designation: users.designation,
+          department: users.department,
+          createdAt: users.createdAt,
+          updatedAt: users.updatedAt,
+        },
+        approver: {
+          id: sql`approver.id`,
+          email: sql`approver.email`,
+          firstName: sql`approver.first_name`,
+          lastName: sql`approver.last_name`,
+          profileImageUrl: sql`approver.profile_image_url`,
+          role: sql`approver.role`,
+          designation: sql`approver.designation`,
+          department: sql`approver.department`,
+          createdAt: sql`approver.created_at`,
+          updatedAt: sql`approver.updated_at`,
+        },
+      })
+      .from(encashmentRequests)
+      .innerJoin(users, eq(encashmentRequests.userId, users.id))
+      .leftJoin(sql`${users} as approver`, sql`${encashmentRequests.approvedBy} = approver.id`)
+      .where(eq(encashmentRequests.userId, userId))
+      .orderBy(desc(encashmentRequests.createdAt)) as EncashmentRequestWithDetails[];
+  }
+
+  async getPendingEncashmentRequests(): Promise<EncashmentRequestWithDetails[]> {
+    return await db
+      .select({
+        id: encashmentRequests.id,
+        userId: encashmentRequests.userId,
+        pointsRequested: encashmentRequests.pointsRequested,
+        monetaryValue: encashmentRequests.monetaryValue,
+        status: encashmentRequests.status,
+        approvedBy: encashmentRequests.approvedBy,
+        approvedAt: encashmentRequests.approvedAt,
+        rejectionReason: encashmentRequests.rejectionReason,
+        paymentDetails: encashmentRequests.paymentDetails,
+        createdAt: encashmentRequests.createdAt,
+        updatedAt: encashmentRequests.updatedAt,
+        user: {
+          id: users.id,
+          email: users.email,
+          firstName: users.firstName,
+          lastName: users.lastName,
+          profileImageUrl: users.profileImageUrl,
+          role: users.role,
+          designation: users.designation,
+          department: users.department,
+          createdAt: users.createdAt,
+          updatedAt: users.updatedAt,
+        },
+        approver: {
+          id: sql`approver.id`,
+          email: sql`approver.email`,
+          firstName: sql`approver.first_name`,
+          lastName: sql`approver.last_name`,
+          profileImageUrl: sql`approver.profile_image_url`,
+          role: sql`approver.role`,
+          designation: sql`approver.designation`,
+          department: sql`approver.department`,
+          createdAt: sql`approver.created_at`,
+          updatedAt: sql`approver.updated_at`,
+        },
+      })
+      .from(encashmentRequests)
+      .innerJoin(users, eq(encashmentRequests.userId, users.id))
+      .leftJoin(sql`${users} as approver`, sql`${encashmentRequests.approvedBy} = approver.id`)
+      .where(eq(encashmentRequests.status, "pending"))
+      .orderBy(desc(encashmentRequests.createdAt)) as EncashmentRequestWithDetails[];
+  }
+
+  async approveEncashmentRequest(approval: ApproveEncashmentRequest, approverId: string): Promise<EncashmentRequest> {
+    const updateData: any = {
+      status: approval.status,
+      approvedBy: approverId,
+      approvedAt: new Date(),
+      updatedAt: new Date(),
+    };
+
+    if (approval.rejectionReason) {
+      updateData.rejectionReason = approval.rejectionReason;
+    }
+
+    if (approval.paymentDetails) {
+      updateData.paymentDetails = approval.paymentDetails;
+    }
+
+    const [encashmentRequest] = await db
+      .update(encashmentRequests)
+      .set(updateData)
+      .where(eq(encashmentRequests.id, approval.id))
+      .returning();
+
+    return encashmentRequest;
   }
 }
 
