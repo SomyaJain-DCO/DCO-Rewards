@@ -18,7 +18,7 @@ export default function Landing() {
             Dhadda & Co.
           </h1>
           <p className="text-xl text-gray-600 mb-2">Chartered Accountants</p>
-          <p className="text-lg text-gray-500 mb-8">Team Rewards Management System</p>
+          <p className="text-lg text-gray-500 mb-8">DCo Rewards Management System</p>
           
           <div className="max-w-2xl mx-auto text-gray-600 mb-8">
             <p>
