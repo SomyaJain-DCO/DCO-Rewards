@@ -7,7 +7,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
 import { Textarea } from "@/components/ui/textarea";
-import { Calendar, FileText, User, Trophy, Clock, Search, X, ExternalLink, Edit } from "lucide-react";
+import { Calendar, FileText, User, Trophy, Clock, Search, X, ExternalLink, Edit, Trash2 } from "lucide-react";
 import { useAuth } from "@/hooks/useAuth";
 import { useLocation } from "wouter";
 import { format } from "date-fns";
@@ -102,6 +102,29 @@ export default function MyActivities() {
     },
   });
 
+  // Delete mutation
+  const deleteMutation = useMutation({
+    mutationFn: async (activityId: number) => {
+      return await apiRequest("DELETE", `/api/activities/${activityId}`);
+    },
+    onSuccess: () => {
+      toast({
+        title: "Success",
+        description: "Activity deleted successfully!",
+      });
+      queryClient.invalidateQueries({ queryKey: ["/api/user-activities", user?.id] });
+      queryClient.invalidateQueries({ queryKey: ["/api/activities/my"] });
+      queryClient.invalidateQueries({ queryKey: ["/api/stats"] });
+    },
+    onError: (error: any) => {
+      toast({
+        title: "Error",
+        description: error.message || "Failed to delete activity",
+        variant: "destructive",
+      });
+    },
+  });
+
   // Edit handlers
   const handleEditActivity = (activity: any) => {
     setEditingActivity(activity);
@@ -119,6 +142,13 @@ export default function MyActivities() {
   const onEditSubmit = (data: EditFormData) => {
     if (editingActivity) {
       editMutation.mutate({ ...data, id: editingActivity.id });
+    }
+  };
+
+  // Delete handler
+  const handleDeleteActivity = (activityId: number) => {
+    if (confirm("Are you sure you want to delete this activity? This action cannot be undone.")) {
+      deleteMutation.mutate(activityId);
     }
   };
 
@@ -333,15 +363,27 @@ export default function MyActivities() {
                           </a>
                         )}
                         {activity.status === "pending" && (
-                          <Button
-                            size="sm"
-                            variant="outline"
-                            onClick={() => handleEditActivity(activity)}
-                            className="h-6 px-2 text-xs"
-                          >
-                            <Edit className="w-3 h-3 mr-1" />
-                            Edit
-                          </Button>
+                          <>
+                            <Button
+                              size="sm"
+                              variant="outline"
+                              onClick={() => handleEditActivity(activity)}
+                              className="h-6 px-2 text-xs"
+                            >
+                              <Edit className="w-3 h-3 mr-1" />
+                              Edit
+                            </Button>
+                            <Button
+                              size="sm"
+                              variant="outline"
+                              onClick={() => handleDeleteActivity(activity.id)}
+                              className="h-6 px-2 text-xs text-red-600 hover:text-red-700 hover:border-red-300"
+                              disabled={deleteMutation.isPending}
+                            >
+                              <Trash2 className="w-3 h-3 mr-1" />
+                              Delete
+                            </Button>
+                          </>
                         )}
                         {getStatusBadge(activity.status)}
                       </div>
