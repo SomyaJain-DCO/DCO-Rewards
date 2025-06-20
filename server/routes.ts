@@ -168,6 +168,45 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Get user by ID
+  app.get('/api/users/:userId', isAuthenticated, async (req: any, res: any) => {
+    try {
+      const { userId } = req.params;
+      const user = await storage.getUserById(userId);
+      if (!user) {
+        return res.status(404).json({ message: "User not found" });
+      }
+      res.json(user);
+    } catch (error) {
+      console.error("Error fetching user:", error);
+      res.status(500).json({ message: "Failed to fetch user" });
+    }
+  });
+
+  // Get user activities
+  app.get('/api/users/:userId/activities', isAuthenticated, async (req: any, res: any) => {
+    try {
+      const { userId } = req.params;
+      const activities = await storage.getActivitiesByUserId(userId);
+      res.json(activities);
+    } catch (error) {
+      console.error("Error fetching user activities:", error);
+      res.status(500).json({ message: "Failed to fetch user activities" });
+    }
+  });
+
+  // Get user stats
+  app.get('/api/users/:userId/stats', isAuthenticated, async (req: any, res: any) => {
+    try {
+      const { userId } = req.params;
+      const stats = await storage.getUserStatsById(userId);
+      res.json(stats);
+    } catch (error) {
+      console.error("Error fetching user stats:", error);
+      res.status(500).json({ message: "Failed to fetch user stats" });
+    }
+  });
+
   const httpServer = createServer(app);
   return httpServer;
 }

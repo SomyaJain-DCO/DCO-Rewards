@@ -39,6 +39,9 @@ export interface IStorage {
   
   // Team operations
   getAllUsers(): Promise<User[]>;
+  getUserById(id: string): Promise<User | undefined>;
+  getActivitiesByUserId(userId: string): Promise<ActivityWithDetails[]>;
+  getUserStatsById(userId: string): Promise<UserStats>;
 }
 
 export class DatabaseStorage implements IStorage {
@@ -365,6 +368,58 @@ export class DatabaseStorage implements IStorage {
 
   async getAllUsers(): Promise<User[]> {
     return await db.select().from(users).orderBy(users.firstName, users.lastName);
+  }
+
+  async getUserById(id: string): Promise<User | undefined> {
+    const [user] = await db.select().from(users).where(eq(users.id, id));
+    return user;
+  }
+
+  async getActivitiesByUserId(userId: string): Promise<ActivityWithDetails[]> {
+    return await db
+      .select({
+        id: activities.id,
+        userId: activities.userId,
+        categoryId: activities.categoryId,
+        title: activities.title,
+        description: activities.description,
+        activityDate: activities.activityDate,
+        status: activities.status,
+        approvedBy: activities.approvedBy,
+        approvedAt: activities.approvedAt,
+        rejectionReason: activities.rejectionReason,
+        attachmentUrl: activities.attachmentUrl,
+        createdAt: activities.createdAt,
+        updatedAt: activities.updatedAt,
+        user: {
+          id: users.id,
+          email: users.email,
+          firstName: users.firstName,
+          lastName: users.lastName,
+          profileImageUrl: users.profileImageUrl,
+          role: users.role,
+          designation: users.designation,
+          department: users.department,
+          createdAt: users.createdAt,
+          updatedAt: users.updatedAt,
+        },
+        category: {
+          id: activityCategories.id,
+          name: activityCategories.name,
+          points: activityCategories.points,
+          monetaryValue: activityCategories.monetaryValue,
+          description: activityCategories.description,
+        },
+      })
+      .from(activities)
+      .innerJoin(users, eq(activities.userId, users.id))
+      .innerJoin(activityCategories, eq(activities.categoryId, activityCategories.id))
+      .where(eq(activities.userId, userId))
+      .orderBy(desc(activities.createdAt)) as ActivityWithDetails[];
+  }
+
+  async getUserStatsById(userId: string): Promise<UserStats> {
+    return this.getUserStats(userId);
   }
 }
 

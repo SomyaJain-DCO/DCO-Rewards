@@ -2,6 +2,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { cn } from "@/lib/utils";
+import { Link } from "wouter";
 
 interface LeaderboardUser {
   id: string;
@@ -139,9 +140,11 @@ export default function Leaderboard({ data, currentUserId, isLoading, userRole }
                     </div>
                     <div>
                       <div className="flex items-center space-x-2">
-                        <p className="font-medium text-gray-800">
-                          {getDisplayName(user)}
-                        </p>
+                        <Link href={`/user/${user.id}`}>
+                          <p className="font-medium text-gray-800 hover:text-blue-600 cursor-pointer transition-colors">
+                            {getDisplayName(user)}
+                          </p>
+                        </Link>
                         {isCurrentUser && (
                           <Badge className="bg-primary text-white">You</Badge>
                         )}
