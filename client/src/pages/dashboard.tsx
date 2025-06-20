@@ -28,6 +28,8 @@ export default function Dashboard() {
     enabled: isAuthenticated,
   });
 
+  const userRole = (user as any)?.role;
+
   useEffect(() => {
     if (!isLoading && !isAuthenticated) {
       toast({
@@ -73,7 +75,7 @@ export default function Dashboard() {
         <StatsCard
           title="My Total Points"
           value={stats?.totalPoints || 0}
-          subtitle={`₹${stats?.totalEarnings?.toLocaleString() || 0}`}
+          subtitle={userRole === 'approver' ? `₹${stats?.totalEarnings?.toLocaleString() || 0}` : "Points earned"}
           icon={Trophy}
           iconColor="text-primary"
           bgColor="bg-blue-100"
@@ -81,7 +83,7 @@ export default function Dashboard() {
         <StatsCard
           title="This Month"
           value={stats?.monthlyPoints || 0}
-          subtitle={`₹${stats?.monthlyEarnings?.toLocaleString() || 0}`}
+          subtitle={userRole === 'approver' ? `₹${stats?.monthlyEarnings?.toLocaleString() || 0}` : "Points this month"}
           icon={Calendar}
           iconColor="text-secondary"
           bgColor="bg-green-100"
@@ -89,7 +91,7 @@ export default function Dashboard() {
         <StatsCard
           title="Pending Approval"
           value={stats?.pendingPoints || 0}
-          subtitle={`₹${stats?.pendingEarnings?.toLocaleString() || 0}`}
+          subtitle={userRole === 'approver' ? `₹${stats?.pendingEarnings?.toLocaleString() || 0}` : "Awaiting approval"}
           icon={Clock}
           iconColor="text-yellow-600"
           bgColor="bg-yellow-100"
@@ -109,6 +111,7 @@ export default function Dashboard() {
         data={leaderboard || []}
         currentUserId={user?.id}
         isLoading={leaderboardLoading}
+        userRole={userRole}
       />
 
       {/* Recent Activities */}
@@ -142,7 +145,8 @@ export default function Dashboard() {
                 <ActivityCard
                   key={activity.id}
                   activity={activity}
-                  showApprover={true}
+                  showApprover={false}
+                  userRole={userRole}
                 />
               ))}
             </div>

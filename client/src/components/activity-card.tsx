@@ -34,9 +34,10 @@ interface ActivityCardProps {
     };
   };
   showApprover?: boolean;
+  userRole?: string;
 }
 
-export default function ActivityCard({ activity, showApprover = false }: ActivityCardProps) {
+export default function ActivityCard({ activity, showApprover = false, userRole }: ActivityCardProps) {
   const getInitials = (firstName?: string, lastName?: string, email?: string) => {
     if (!firstName && !lastName) return email?.charAt(0).toUpperCase() || "U";
     return `${firstName?.charAt(0) || ""}${lastName?.charAt(0) || ""}`.toUpperCase();
@@ -102,12 +103,7 @@ export default function ActivityCard({ activity, showApprover = false }: Activit
             <span>by {getDisplayName(activity.user)}</span>
             <span>•</span>
             <span>{formatDistanceToNow(new Date(activity.createdAt))} ago</span>
-            {showApprover && activity.approver && activity.status === "approved" && (
-              <>
-                <span>•</span>
-                <span>Approved by {getDisplayName(activity.approver)}</span>
-              </>
-            )}
+
           </div>
           {activity.status === "rejected" && activity.rejectionReason && (
             <p className="text-sm text-accent mt-1">
@@ -131,11 +127,13 @@ export default function ActivityCard({ activity, showApprover = false }: Activit
             {activity.status === "pending" && `+${activity.category.points} pts`}
             {activity.status === "rejected" && "Rejected"}
           </Badge>
-          <p className="text-xs text-gray-500 mt-1">
-            {activity.status === "approved" && `₹${activity.category.monetaryValue?.toLocaleString()}`}
-            {activity.status === "pending" && "Pending"}
-            {activity.status === "rejected" && "₹0"}
-          </p>
+          {userRole === 'approver' && (
+            <p className="text-xs text-gray-500 mt-1">
+              {activity.status === "approved" && `₹${activity.category.monetaryValue?.toLocaleString()}`}
+              {activity.status === "pending" && "Pending"}
+              {activity.status === "rejected" && "₹0"}
+            </p>
+          )}
         </div>
       </div>
     </div>

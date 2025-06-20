@@ -17,9 +17,10 @@ interface LeaderboardProps {
   data: LeaderboardUser[];
   currentUserId?: string;
   isLoading?: boolean;
+  userRole?: string;
 }
 
-export default function Leaderboard({ data, currentUserId, isLoading }: LeaderboardProps) {
+export default function Leaderboard({ data, currentUserId, isLoading, userRole }: LeaderboardProps) {
   const getInitials = (firstName?: string, lastName?: string, email?: string) => {
     if (!firstName && !lastName) return email?.charAt(0).toUpperCase() || "U";
     return `${firstName?.charAt(0) || ""}${lastName?.charAt(0) || ""}`.toUpperCase();
@@ -152,9 +153,11 @@ export default function Leaderboard({ data, currentUserId, isLoading }: Leaderbo
                   </div>
                   <div className="text-right">
                     <p className="font-bold text-gray-800">{user.totalPoints} pts</p>
-                    <p className="text-sm text-secondary font-medium">
-                      ₹{user.totalEarnings.toLocaleString()}
-                    </p>
+                    {userRole === 'approver' && (
+                      <p className="text-sm text-secondary font-medium">
+                        ₹{user.totalEarnings.toLocaleString()}
+                      </p>
+                    )}
                   </div>
                 </div>
               );
