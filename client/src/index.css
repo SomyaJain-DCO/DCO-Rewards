@@ -48,6 +48,11 @@
   --radius: 0.5rem;
 }
 
+/* Ensure sidebar text is always white on navy background */
+.sidebar-container * {
+  color: hsl(var(--primary-foreground)) !important;
+}
+
 @layer base {
   * {
     @apply border-border;

@@ -130,6 +130,7 @@ Changelog:
 - June 20, 2025. Restricted Team Directory access to approvers only
 - June 20, 2025. Enhanced dashboard with clickable user names and improved pending approvals display
 - June 20, 2025. Implemented navy blue color theme matching company logo with proper text contrast
+- June 20, 2025. Added collapsible sidebar with mobile hamburger menu and resolved all text contrast issues
 ```
 
 ## User Preferences

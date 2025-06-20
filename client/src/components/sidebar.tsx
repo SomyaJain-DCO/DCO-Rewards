@@ -62,7 +62,7 @@ export default function Sidebar() {
 
       {/* Sidebar */}
       <aside className={cn(
-        "w-64 bg-primary shadow-lg fixed h-full z-40 transition-transform duration-300 ease-in-out",
+        "sidebar-container w-64 bg-primary text-primary-foreground shadow-lg fixed h-full z-40 transition-transform duration-300 ease-in-out",
         "lg:translate-x-0",
         isOpen ? "translate-x-0" : "-translate-x-full"
       )}>
