@@ -145,6 +145,20 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Get current user's activities (for my-activities page)
+  app.get('/api/user-activities', isAuthenticated, async (req: any, res: any) => {
+    try {
+      const userId = req.user?.claims.sub;
+      if (!userId) return res.status(401).json({ message: "Unauthorized" });
+
+      const activities = await storage.getActivitiesByUserId(userId);
+      res.json(activities);
+    } catch (error) {
+      console.error("Error fetching user activities:", error);
+      res.status(500).json({ message: "Failed to fetch user activities" });
+    }
+  });
+
   // Get recent activities
   app.get('/api/activities/recent', isAuthenticated, async (req: any, res: any) => {
     try {

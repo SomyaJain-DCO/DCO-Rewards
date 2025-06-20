@@ -12,6 +12,7 @@ import Profile from "@/pages/profile";
 import Approvals from "@/pages/approvals";
 import Team from "@/pages/team";
 import UserActivities from "@/pages/user-activities";
+import MyActivities from "@/pages/my-activities";
 import Sidebar from "@/components/sidebar";
 import Header from "@/components/header";
 
@@ -43,6 +44,7 @@ function Router() {
                   <Route path="/team" component={Team} />
                   <Route path="/profile" component={Profile} />
                   <Route path="/approvals" component={Approvals} />
+                  <Route path="/my-activities" component={MyActivities} />
                   <Route path="/user/:userId" component={({ params }) => <UserActivities userId={params?.userId || ""} />} />
                   <Route component={NotFound} />
                 </Switch>

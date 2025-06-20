@@ -79,6 +79,8 @@ export default function Dashboard() {
           icon={Trophy}
           iconColor="text-primary"
           bgColor="bg-blue-100"
+          href="/my-activities?filter=all"
+          clickable={true}
         />
         <StatsCard
           title="This Month"
@@ -87,6 +89,8 @@ export default function Dashboard() {
           icon={Calendar}
           iconColor="text-secondary"
           bgColor="bg-green-100"
+          href="/my-activities?filter=monthly"
+          clickable={true}
         />
         <StatsCard
           title="Pending Approval"
@@ -95,6 +99,8 @@ export default function Dashboard() {
           icon={Clock}
           iconColor="text-yellow-600"
           bgColor="bg-yellow-100"
+          href="/my-activities?filter=pending"
+          clickable={true}
         />
         <StatsCard
           title="Ranking"
