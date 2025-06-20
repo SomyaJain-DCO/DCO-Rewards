@@ -24,9 +24,7 @@ export default function Profile() {
   const [yearFilter, setYearFilter] = useState("all");
   const [monthFilter, setMonthFilter] = useState("all");
   
-  // Designation editing state
-  const [isEditingDesignation, setIsEditingDesignation] = useState(false);
-  const [newDesignation, setNewDesignation] = useState("");
+
   
   // Profile edit dialog state
   const [isEditDialogOpen, setIsEditDialogOpen] = useState(false);
@@ -34,82 +32,9 @@ export default function Profile() {
   const [editLastName, setEditLastName] = useState("");
   const [editDesignation, setEditDesignation] = useState("");
 
-  // Function to get role based on designation
-  const getRoleFromDesignation = (designation: string): string => {
-    switch (designation) {
-      case "Partner":
-        return "approver";
-      case "Senior Manager":
-      case "Manager":
-      case "Associate":
-      case "Senior Consultant":
-      case "Analyst":
-        return "contributor";
-      default:
-        return "contributor";
-    }
-  };
 
-  // Mutation for updating designation and role
-  const updateDesignationMutation = useMutation({
-    mutationFn: async (designation: string) => {
-      const role = getRoleFromDesignation(designation);
-      const response = await fetch("/api/profile/designation", {
-        method: "PUT",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({ designation, role }),
-      });
-      
-      if (!response.ok) {
-        const errorData = await response.json();
-        throw new Error(errorData.message || "Failed to update designation");
-      }
-      
-      return await response.json();
-    },
-    onSuccess: () => {
-      toast({
-        title: "Success",
-        description: "Designation updated successfully",
-      });
-      setIsEditingDesignation(false);
-      queryClient.invalidateQueries({ queryKey: ["/api/auth/user"] });
-    },
-    onError: (error) => {
-      if (isUnauthorizedError(error)) {
-        toast({
-          title: "Unauthorized",
-          description: "You are logged out. Logging in again...",
-          variant: "destructive",
-        });
-        setTimeout(() => {
-          window.location.href = "/api/login";
-        }, 500);
-        return;
-      }
-      toast({
-        title: "Error",
-        description: error.message || "Failed to update designation",
-        variant: "destructive",
-      });
-    },
-  });
 
-  const handleEditDesignation = () => {
-    setNewDesignation((user as any)?.designation || "");
-    setIsEditingDesignation(true);
-  };
 
-  const handleSaveDesignation = () => {
-    updateDesignationMutation.mutate(newDesignation.trim());
-  };
-
-  const handleCancelEdit = () => {
-    setIsEditingDesignation(false);
-    setNewDesignation("");
-  };
 
   const { data: stats, isLoading: statsLoading } = useQuery({
     queryKey: ["/api/stats"],
@@ -270,8 +195,13 @@ export default function Profile() {
                 </span>
               </div>
 
-              {/* Email Only */}
+              {/* Name and Email */}
               <div>
+                <h3 className="text-lg font-semibold text-gray-900">
+                  {(user as any)?.firstName && (user as any)?.lastName 
+                    ? `${(user as any).firstName} ${(user as any).lastName}`
+                    : (user as any)?.firstName || (user as any)?.lastName || "User"}
+                </h3>
                 <p className="text-sm text-gray-600">
                   {(user as any)?.email}
                 </p>
@@ -280,57 +210,10 @@ export default function Profile() {
               {/* User Details */}
               <div className="space-y-2 text-sm">
                 
-                <div className="flex items-center justify-center gap-2">
-                  {isEditingDesignation ? (
-                    <div className="flex items-center justify-center gap-2 w-full max-w-md">
-                      <Select
-                        value={newDesignation}
-                        onValueChange={setNewDesignation}
-                        disabled={updateDesignationMutation.isPending}
-                      >
-                        <SelectTrigger className="flex-1">
-                          <SelectValue placeholder="Select your designation" />
-                        </SelectTrigger>
-                        <SelectContent>
-                          <SelectItem value="Partner">Partner</SelectItem>
-                          <SelectItem value="Senior Manager">Senior Manager</SelectItem>
-                          <SelectItem value="Manager">Manager</SelectItem>
-                          <SelectItem value="Associate">Associate</SelectItem>
-                          <SelectItem value="Senior Consultant">Senior Consultant</SelectItem>
-                          <SelectItem value="Analyst">Analyst</SelectItem>
-                        </SelectContent>
-                      </Select>
-                      <Button
-                        size="sm"
-                        onClick={handleSaveDesignation}
-                        disabled={updateDesignationMutation.isPending || !newDesignation.trim()}
-                      >
-                        <Save className="w-4 h-4" />
-                      </Button>
-                      <Button
-                        size="sm"
-                        variant="outline"
-                        onClick={handleCancelEdit}
-                        disabled={updateDesignationMutation.isPending}
-                      >
-                        <XCircle className="w-4 h-4" />
-                      </Button>
-                    </div>
-                  ) : (
-                    <div className="flex items-center justify-center gap-2">
-                      <p className="text-gray-600 text-center">
-                        {(user as any)?.designation || "No designation set"}
-                      </p>
-                      <Button
-                        size="sm"
-                        variant="ghost"
-                        onClick={handleEditDesignation}
-                        className="p-1 h-auto"
-                      >
-                        <Edit className="w-4 h-4" />
-                      </Button>
-                    </div>
-                  )}
+                <div className="flex items-center justify-center">
+                  <p className="text-gray-600 text-center">
+                    {(user as any)?.designation || "No designation set"}
+                  </p>
                 </div>
                 {(user as any)?.department && (
                   <p className="text-gray-600">{(user as any).department}</p>
