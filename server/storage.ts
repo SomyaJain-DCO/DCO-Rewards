@@ -3,6 +3,7 @@ import {
   activities,
   activityCategories,
   encashmentRequests,
+  profileChangeRequests,
   type User,
   type UpsertUser,
   type Activity,
@@ -13,8 +14,12 @@ import {
   type ApproveActivity,
   type InsertEncashmentRequest,
   type ApproveEncashmentRequest,
+  type ProfileChangeRequest,
+  type InsertProfileChangeRequest,
+  type ApproveProfileChangeRequest,
   type ActivityWithDetails,
   type EncashmentRequestWithDetails,
+  type ProfileChangeRequestWithDetails,
   type UserStats,
 } from "@shared/schema";
 import { db } from "./db";
@@ -60,6 +65,12 @@ export interface IStorage {
   getEncashmentRequestsByUser(userId: string): Promise<EncashmentRequestWithDetails[]>;
   getPendingEncashmentRequests(): Promise<EncashmentRequestWithDetails[]>;
   approveEncashmentRequest(approval: ApproveEncashmentRequest, approverId: string): Promise<EncashmentRequest>;
+  
+  // Profile change request operations
+  createProfileChangeRequest(request: InsertProfileChangeRequest): Promise<ProfileChangeRequest>;
+  getProfileChangeRequestsByUser(userId: string): Promise<ProfileChangeRequestWithDetails[]>;
+  getPendingProfileChangeRequests(): Promise<ProfileChangeRequestWithDetails[]>;
+  approveProfileChangeRequest(approval: ApproveProfileChangeRequest, approverId: string): Promise<ProfileChangeRequest>;
 }
 
 export class DatabaseStorage implements IStorage {
@@ -759,6 +770,165 @@ export class DatabaseStorage implements IStorage {
       .returning();
 
     return encashmentRequest;
+  }
+
+  // Profile change request operations
+  async createProfileChangeRequest(request: InsertProfileChangeRequest): Promise<ProfileChangeRequest> {
+    const [profileChangeRequest] = await db
+      .insert(profileChangeRequests)
+      .values(request)
+      .returning();
+    return profileChangeRequest;
+  }
+
+  async getProfileChangeRequestsByUser(userId: string): Promise<ProfileChangeRequestWithDetails[]> {
+    return await db
+      .select({
+        id: profileChangeRequests.id,
+        userId: profileChangeRequests.userId,
+        requestedFirstName: profileChangeRequests.requestedFirstName,
+        requestedLastName: profileChangeRequests.requestedLastName,
+        requestedDesignation: profileChangeRequests.requestedDesignation,
+        profileImageUrl: profileChangeRequests.profileImageUrl,
+        status: profileChangeRequests.status,
+        approvedBy: profileChangeRequests.approvedBy,
+        approvedAt: profileChangeRequests.approvedAt,
+        rejectionReason: profileChangeRequests.rejectionReason,
+        createdAt: profileChangeRequests.createdAt,
+        updatedAt: profileChangeRequests.updatedAt,
+        user: {
+          id: users.id,
+          email: users.email,
+          firstName: users.firstName,
+          lastName: users.lastName,
+          profileImageUrl: users.profileImageUrl,
+          role: users.role,
+          designation: users.designation,
+          department: users.department,
+          createdAt: users.createdAt,
+          updatedAt: users.updatedAt,
+        },
+        approver: {
+          id: sql`approver.id`,
+          email: sql`approver.email`,
+          firstName: sql`approver.first_name`,
+          lastName: sql`approver.last_name`,
+          profileImageUrl: sql`approver.profile_image_url`,
+          role: sql`approver.role`,
+          designation: sql`approver.designation`,
+          department: sql`approver.department`,
+          createdAt: sql`approver.created_at`,
+          updatedAt: sql`approver.updated_at`,
+        },
+      })
+      .from(profileChangeRequests)
+      .innerJoin(users, eq(profileChangeRequests.userId, users.id))
+      .leftJoin(sql`${users} as approver`, sql`${profileChangeRequests.approvedBy} = approver.id`)
+      .where(eq(profileChangeRequests.userId, userId))
+      .orderBy(desc(profileChangeRequests.createdAt)) as ProfileChangeRequestWithDetails[];
+  }
+
+  async getPendingProfileChangeRequests(): Promise<ProfileChangeRequestWithDetails[]> {
+    return await db
+      .select({
+        id: profileChangeRequests.id,
+        userId: profileChangeRequests.userId,
+        requestedFirstName: profileChangeRequests.requestedFirstName,
+        requestedLastName: profileChangeRequests.requestedLastName,
+        requestedDesignation: profileChangeRequests.requestedDesignation,
+        profileImageUrl: profileChangeRequests.profileImageUrl,
+        status: profileChangeRequests.status,
+        approvedBy: profileChangeRequests.approvedBy,
+        approvedAt: profileChangeRequests.approvedAt,
+        rejectionReason: profileChangeRequests.rejectionReason,
+        createdAt: profileChangeRequests.createdAt,
+        updatedAt: profileChangeRequests.updatedAt,
+        user: {
+          id: users.id,
+          email: users.email,
+          firstName: users.firstName,
+          lastName: users.lastName,
+          profileImageUrl: users.profileImageUrl,
+          role: users.role,
+          designation: users.designation,
+          department: users.department,
+          createdAt: users.createdAt,
+          updatedAt: users.updatedAt,
+        },
+        approver: {
+          id: sql`approver.id`,
+          email: sql`approver.email`,
+          firstName: sql`approver.first_name`,
+          lastName: sql`approver.last_name`,
+          profileImageUrl: sql`approver.profile_image_url`,
+          role: sql`approver.role`,
+          designation: sql`approver.designation`,
+          department: sql`approver.department`,
+          createdAt: sql`approver.created_at`,
+          updatedAt: sql`approver.updated_at`,
+        },
+      })
+      .from(profileChangeRequests)
+      .innerJoin(users, eq(profileChangeRequests.userId, users.id))
+      .leftJoin(sql`${users} as approver`, sql`${profileChangeRequests.approvedBy} = approver.id`)
+      .where(eq(profileChangeRequests.status, "pending"))
+      .orderBy(desc(profileChangeRequests.createdAt)) as ProfileChangeRequestWithDetails[];
+  }
+
+  async approveProfileChangeRequest(approval: ApproveProfileChangeRequest, approverId: string): Promise<ProfileChangeRequest> {
+    const updateData: any = {
+      status: approval.status,
+      approvedBy: approverId,
+      approvedAt: new Date(),
+      updatedAt: new Date(),
+    };
+
+    if (approval.rejectionReason) {
+      updateData.rejectionReason = approval.rejectionReason;
+    }
+
+    const [profileChangeRequest] = await db
+      .update(profileChangeRequests)
+      .set(updateData)
+      .where(eq(profileChangeRequests.id, approval.id))
+      .returning();
+
+    // If approved, apply the changes to the user profile
+    if (approval.status === "approved") {
+      const request = await db
+        .select()
+        .from(profileChangeRequests)
+        .where(eq(profileChangeRequests.id, approval.id))
+        .limit(1);
+
+      if (request[0]) {
+        const userUpdateData: any = {
+          firstName: request[0].requestedFirstName,
+          lastName: request[0].requestedLastName,
+          designation: request[0].requestedDesignation,
+          updatedAt: new Date(),
+        };
+
+        // Update role based on designation
+        if (request[0].requestedDesignation === 'Partner') {
+          userUpdateData.role = 'approver';
+        } else {
+          userUpdateData.role = 'contributor';
+        }
+
+        // Update profile image if provided
+        if (request[0].profileImageUrl) {
+          userUpdateData.profileImageUrl = request[0].profileImageUrl;
+        }
+
+        await db
+          .update(users)
+          .set(userUpdateData)
+          .where(eq(users.id, request[0].userId));
+      }
+    }
+
+    return profileChangeRequest;
   }
 }
 

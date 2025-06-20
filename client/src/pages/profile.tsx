@@ -144,6 +144,11 @@ export default function Profile() {
     enabled: isAuthenticated,
   });
 
+  const { data: profileChangeRequests } = useQuery({
+    queryKey: ["/api/profile-change-requests"],
+    enabled: isAuthenticated,
+  });
+
   // Get unique years and months for filter options
   const availableYears = useMemo(() => {
     if (!activities) return [];

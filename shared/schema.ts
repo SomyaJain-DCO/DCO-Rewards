@@ -235,6 +235,12 @@ export type EncashmentRequestWithDetails = EncashmentRequest & {
   approver?: User;
 };
 
+// Profile change request with relations
+export type ProfileChangeRequestWithDetails = ProfileChangeRequest & {
+  user: User;
+  approver?: User;
+};
+
 // User stats type
 export type UserStats = {
   totalPoints: number;

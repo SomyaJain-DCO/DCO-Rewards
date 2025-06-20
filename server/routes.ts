@@ -3,7 +3,7 @@ import express from "express";
 import { createServer, type Server } from "http";
 import { storage } from "./storage";
 import { setupAuth, isAuthenticated } from "./replitAuth";
-import { insertActivitySchema, approveActivitySchema, insertEncashmentRequestSchema, approveEncashmentRequestSchema, insertProfileChangeRequestSchema, users, activities, encashmentRequests, profileChangeRequests } from "@shared/schema";
+import { insertActivitySchema, approveActivitySchema, insertEncashmentRequestSchema, approveEncashmentRequestSchema, insertProfileChangeRequestSchema, approveProfileChangeRequestSchema, users, activities, encashmentRequests, profileChangeRequests } from "@shared/schema";
 import { db } from "./db";
 import { eq } from "drizzle-orm";
 import multer from "multer";
@@ -811,6 +811,64 @@ export async function registerRoutes(app: Express): Promise<Server> {
     } catch (error) {
       console.error("Error approving encashment request:", error);
       res.status(500).json({ message: "Failed to approve encashment request" });
+    }
+  });
+
+  // Profile change request routes
+  // Get user's profile change requests
+  app.get('/api/profile-change-requests', isAuthenticated, async (req: any, res: any) => {
+    try {
+      const userId = req.user?.claims.sub;
+      if (!userId) return res.status(401).json({ message: "Unauthorized" });
+
+      const profileChangeRequests = await storage.getProfileChangeRequestsByUser(userId);
+      res.json(profileChangeRequests);
+    } catch (error) {
+      console.error("Error fetching profile change requests:", error);
+      res.status(500).json({ message: "Failed to fetch profile change requests" });
+    }
+  });
+
+  // Get pending profile change requests (approvers only)
+  app.get('/api/profile-change-requests/pending', isAuthenticated, async (req: any, res: any) => {
+    try {
+      const userId = req.user?.claims.sub;
+      if (!userId) return res.status(401).json({ message: "Unauthorized" });
+
+      const user = await storage.getUser(userId);
+      if (user?.role !== 'approver') {
+        return res.status(403).json({ message: "Access denied. Profile change approvals are available to approvers only." });
+      }
+
+      const pendingRequests = await storage.getPendingProfileChangeRequests();
+      res.json(pendingRequests);
+    } catch (error) {
+      console.error("Error fetching pending profile change requests:", error);
+      res.status(500).json({ message: "Failed to fetch pending profile change requests" });
+    }
+  });
+
+  // Approve/reject profile change request
+  app.post('/api/profile-change-requests/approve', isAuthenticated, async (req: any, res: any) => {
+    try {
+      const userId = req.user?.claims.sub;
+      if (!userId) return res.status(401).json({ message: "Unauthorized" });
+
+      const user = await storage.getUser(userId);
+      if (user?.role !== 'approver') {
+        return res.status(403).json({ message: "Access denied. Profile change approvals are available to approvers only." });
+      }
+
+      const validatedData = approveProfileChangeRequestSchema.parse(req.body);
+      const profileChangeRequest = await storage.approveProfileChangeRequest(validatedData, userId);
+      
+      res.json({ 
+        message: validatedData.status === 'approved' ? 'Profile change request approved successfully' : 'Profile change request rejected',
+        request: profileChangeRequest 
+      });
+    } catch (error) {
+      console.error("Error approving profile change request:", error);
+      res.status(500).json({ message: "Failed to approve profile change request" });
     }
   });
 
