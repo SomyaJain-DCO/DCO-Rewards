@@ -95,7 +95,7 @@ export default function Leaderboard({ data, currentUserId, isLoading, userRole }
       <CardHeader>
         <div className="flex items-center justify-between">
           <div>
-            <CardTitle>Team Leaderboard</CardTitle>
+            <CardTitle>Points Table</CardTitle>
             <p className="text-sm text-gray-600">All-time rankings</p>
           </div>
           <div className="flex items-center space-x-2">

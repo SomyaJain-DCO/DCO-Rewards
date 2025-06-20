@@ -106,7 +106,7 @@ export default function Dashboard() {
         />
       </div>
 
-      {/* Team Leaderboard */}
+      {/* Points Table */}
       <Leaderboard
         data={leaderboard || []}
         currentUserId={user?.id}
