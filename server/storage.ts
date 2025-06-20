@@ -13,7 +13,7 @@ import {
   type UserStats,
 } from "@shared/schema";
 import { db } from "./db";
-import { eq, desc, and, sql, count } from "drizzle-orm";
+import { eq, desc, and, sql, count, gte } from "drizzle-orm";
 
 // Interface for storage operations
 export interface IStorage {
@@ -35,6 +35,8 @@ export interface IStorage {
   // Dashboard operations
   getUserStats(userId: string): Promise<UserStats>;
   getLeaderboard(): Promise<Array<User & { totalPoints: number; totalEarnings: number }>>;
+  getMonthlyLeaderboard(): Promise<Array<User & { totalPoints: number; totalEarnings: number }>>;
+  getYearlyLeaderboard(): Promise<Array<User & { totalPoints: number; totalEarnings: number }>>;
   getRecentActivities(limit?: number): Promise<ActivityWithDetails[]>;
   
   // Team operations
@@ -303,6 +305,72 @@ export class DatabaseStorage implements IStorage {
       })
       .from(users)
       .leftJoin(activities, and(eq(users.id, activities.userId), eq(activities.status, "approved")))
+      .leftJoin(activityCategories, eq(activities.categoryId, activityCategories.id))
+      .groupBy(users.id)
+      .orderBy(desc(sql`COALESCE(SUM(${activityCategories.points}), 0)`));
+
+    return leaderboard;
+  }
+
+  async getMonthlyLeaderboard(): Promise<Array<User & { totalPoints: number; totalEarnings: number }>> {
+    const currentMonth = new Date();
+    currentMonth.setDate(1);
+    currentMonth.setHours(0, 0, 0, 0);
+    
+    const leaderboard = await db
+      .select({
+        id: users.id,
+        email: users.email,
+        firstName: users.firstName,
+        lastName: users.lastName,
+        profileImageUrl: users.profileImageUrl,
+        role: users.role,
+        designation: users.designation,
+        department: users.department,
+        createdAt: users.createdAt,
+        updatedAt: users.updatedAt,
+        totalPoints: sql<number>`COALESCE(SUM(${activityCategories.points}), 0)`,
+        totalEarnings: sql<number>`COALESCE(SUM(${activityCategories.monetaryValue}), 0)`,
+      })
+      .from(users)
+      .leftJoin(activities, and(
+        eq(users.id, activities.userId), 
+        eq(activities.status, "approved"),
+        gte(activities.approvedAt, currentMonth)
+      ))
+      .leftJoin(activityCategories, eq(activities.categoryId, activityCategories.id))
+      .groupBy(users.id)
+      .orderBy(desc(sql`COALESCE(SUM(${activityCategories.points}), 0)`));
+
+    return leaderboard;
+  }
+
+  async getYearlyLeaderboard(): Promise<Array<User & { totalPoints: number; totalEarnings: number }>> {
+    const currentYear = new Date();
+    currentYear.setMonth(0, 1);
+    currentYear.setHours(0, 0, 0, 0);
+    
+    const leaderboard = await db
+      .select({
+        id: users.id,
+        email: users.email,
+        firstName: users.firstName,
+        lastName: users.lastName,
+        profileImageUrl: users.profileImageUrl,
+        role: users.role,
+        designation: users.designation,
+        department: users.department,
+        createdAt: users.createdAt,
+        updatedAt: users.updatedAt,
+        totalPoints: sql<number>`COALESCE(SUM(${activityCategories.points}), 0)`,
+        totalEarnings: sql<number>`COALESCE(SUM(${activityCategories.monetaryValue}), 0)`,
+      })
+      .from(users)
+      .leftJoin(activities, and(
+        eq(users.id, activities.userId), 
+        eq(activities.status, "approved"),
+        gte(activities.approvedAt, currentYear)
+      ))
       .leftJoin(activityCategories, eq(activities.categoryId, activityCategories.id))
       .groupBy(users.id)
       .orderBy(desc(sql`COALESCE(SUM(${activityCategories.points}), 0)`));

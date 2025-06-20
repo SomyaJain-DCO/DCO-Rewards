@@ -24,6 +24,16 @@ export default function Dashboard() {
     enabled: isAuthenticated,
   });
 
+  const { data: monthlyLeaderboard, isLoading: monthlyLeaderboardLoading } = useQuery({
+    queryKey: ["/api/leaderboard/monthly"],
+    enabled: isAuthenticated,
+  });
+
+  const { data: yearlyLeaderboard, isLoading: yearlyLeaderboardLoading } = useQuery({
+    queryKey: ["/api/leaderboard/yearly"],
+    enabled: isAuthenticated,
+  });
+
   const { data: recentActivities, isLoading: activitiesLoading } = useQuery({
     queryKey: ["/api/activities/recent"],
     enabled: isAuthenticated,
@@ -116,8 +126,10 @@ export default function Dashboard() {
       {/* Points Table */}
       <Leaderboard
         data={leaderboard || []}
+        monthlyData={monthlyLeaderboard || []}
+        yearlyData={yearlyLeaderboard || []}
         currentUserId={user?.id}
-        isLoading={leaderboardLoading}
+        isLoading={leaderboardLoading || monthlyLeaderboardLoading || yearlyLeaderboardLoading}
         userRole={userRole}
       />
 

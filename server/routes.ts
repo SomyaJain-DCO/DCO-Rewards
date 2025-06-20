@@ -145,6 +145,28 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Get monthly leaderboard
+  app.get('/api/leaderboard/monthly', isAuthenticated, async (req: any, res: any) => {
+    try {
+      const leaderboard = await storage.getMonthlyLeaderboard();
+      res.json(leaderboard);
+    } catch (error) {
+      console.error("Error fetching monthly leaderboard:", error);
+      res.status(500).json({ message: "Failed to fetch monthly leaderboard" });
+    }
+  });
+
+  // Get yearly leaderboard
+  app.get('/api/leaderboard/yearly', isAuthenticated, async (req: any, res: any) => {
+    try {
+      const leaderboard = await storage.getYearlyLeaderboard();
+      res.json(leaderboard);
+    } catch (error) {
+      console.error("Error fetching yearly leaderboard:", error);
+      res.status(500).json({ message: "Failed to fetch yearly leaderboard" });
+    }
+  });
+
   // Get current user's activities (for my-activities page)
   app.get('/api/user-activities', isAuthenticated, async (req: any, res: any) => {
     try {
