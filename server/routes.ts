@@ -349,6 +349,36 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Get all users with points summary (approvers only)
+  app.get('/api/users/points-summary', isAuthenticated, async (req: any, res: any) => {
+    try {
+      const userId = req.user?.claims.sub;
+      if (!userId) return res.status(401).json({ message: "Unauthorized" });
+
+      const user = await storage.getUser(userId);
+      if (user?.role !== 'approver') {
+        return res.status(403).json({ message: "Access denied. Only approvers can view users summary." });
+      }
+
+      const allUsers = await storage.getAllUsers();
+      const usersWithStats = await Promise.all(
+        allUsers.map(async (user) => {
+          const stats = await storage.getUserStatsById(user.id);
+          return {
+            ...user,
+            totalPoints: stats.totalPointsEarned || 0,
+            redeemedPoints: stats.redeemedPoints || 0,
+          };
+        })
+      );
+
+      res.json(usersWithStats);
+    } catch (error) {
+      console.error("Error fetching users summary:", error);
+      res.status(500).json({ message: "Failed to fetch users summary" });
+    }
+  });
+
   // Get pending encashment requests (approvers only)
   app.get('/api/encashment/pending', isAuthenticated, async (req: any, res: any) => {
     try {

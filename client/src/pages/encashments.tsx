@@ -9,7 +9,7 @@ import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, D
 import { useToast } from "@/hooks/use-toast";
 import { apiRequest } from "@/lib/queryClient";
 import { format, formatDistanceToNow } from "date-fns";
-import { Check, X, IndianRupee, Clock, User } from "lucide-react";
+import { Check, X, IndianRupee, Clock, User, TrendingUp } from "lucide-react";
 
 export default function Encashments() {
   const { toast } = useToast();
@@ -19,8 +19,13 @@ export default function Encashments() {
   const [showRejectDialog, setShowRejectDialog] = useState(false);
 
   // Fetch pending encashment requests
-  const { data: pendingRequests, isLoading } = useQuery({
+  const { data: pendingRequests, isLoading } = useQuery<any[]>({
     queryKey: ["/api/encashment/pending"],
+  });
+
+  // Fetch all users with their points summary
+  const { data: usersSummary, isLoading: isLoadingSummary } = useQuery<any[]>({
+    queryKey: ["/api/users/points-summary"],
   });
 
   // Approve encashment mutation
@@ -107,7 +112,7 @@ export default function Encashments() {
     return email?.[0]?.toUpperCase() || "U";
   };
 
-  if (isLoading) {
+  if (isLoading || isLoadingSummary) {
     return (
       <div className="space-y-6">
         <div>
@@ -115,7 +120,7 @@ export default function Encashments() {
           <p className="text-gray-600 mt-2">Review and process point-to-cash conversion requests</p>
         </div>
         <div className="flex items-center justify-center py-12">
-          <div className="animate-pulse text-gray-500">Loading encashment requests...</div>
+          <div className="animate-pulse text-gray-500">Loading encashment data...</div>
         </div>
       </div>
     );
@@ -128,7 +133,70 @@ export default function Encashments() {
         <p className="text-gray-600 mt-2">Review and process point-to-cash conversion requests</p>
       </div>
 
-      {!pendingRequests || pendingRequests.length === 0 ? (
+      {/* Contributors Summary */}
+      <Card>
+        <CardHeader>
+          <CardTitle className="flex items-center">
+            <TrendingUp className="h-5 w-5 mr-2" />
+            Contributors Summary
+          </CardTitle>
+        </CardHeader>
+        <CardContent>
+          {!usersSummary || (usersSummary && usersSummary.length === 0) ? (
+            <div className="text-center py-4">
+              <p className="text-gray-500">No contributors data available.</p>
+            </div>
+          ) : (
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+              {usersSummary && usersSummary.map((user: any) => {
+                const balancePoints = user.totalPoints - user.redeemedPoints;
+                const balanceValue = balancePoints * 100; // ₹100 per point
+                
+                return (
+                  <div key={user.id} className="border rounded-lg p-4 hover:shadow-md transition-shadow">
+                    <div className="flex items-center space-x-3 mb-3">
+                      <Avatar className="h-10 w-10">
+                        <AvatarImage src={user.profileImageUrl} />
+                        <AvatarFallback className="bg-blue-600 text-white text-sm">
+                          {getInitials(user.firstName, user.lastName, user.email)}
+                        </AvatarFallback>
+                      </Avatar>
+                      <div className="flex-1 min-w-0">
+                        <p className="text-sm font-medium text-gray-900 truncate">
+                          {getDisplayName(user)}
+                        </p>
+                        <p className="text-xs text-gray-500 truncate">
+                          {user.designation || "Team Member"}
+                        </p>
+                      </div>
+                    </div>
+                    
+                    <div className="space-y-2 text-xs">
+                      <div className="flex justify-between">
+                        <span className="text-gray-600">Total Earned:</span>
+                        <span className="font-medium">{user.totalPoints} pts (₹{(user.totalPoints * 100).toLocaleString()})</span>
+                      </div>
+                      <div className="flex justify-between">
+                        <span className="text-gray-600">Redeemed:</span>
+                        <span className="font-medium text-red-600">{user.redeemedPoints} pts (₹{(user.redeemedPoints * 100).toLocaleString()})</span>
+                      </div>
+                      <div className="flex justify-between border-t pt-2">
+                        <span className="text-gray-900 font-medium">Balance:</span>
+                        <span className="font-bold text-green-600">{balancePoints} pts (₹{balanceValue.toLocaleString()})</span>
+                      </div>
+                    </div>
+                  </div>
+                );
+              })}
+            </div>
+          )}
+        </CardContent>
+      </Card>
+
+      {/* Pending Requests Section */}
+      <div>
+        <h2 className="text-xl font-semibold text-gray-900 mb-4">Pending Requests</h2>
+        {!pendingRequests || (pendingRequests && pendingRequests.length === 0) ? (
         <Card>
           <CardContent className="py-12">
             <div className="text-center">
@@ -140,7 +208,7 @@ export default function Encashments() {
         </Card>
       ) : (
         <div className="space-y-4">
-          {pendingRequests.map((request: any) => (
+          {pendingRequests && pendingRequests.map((request: any) => (
             <Card key={request.id} className="hover:shadow-md transition-shadow">
               <CardContent className="p-6">
                 <div className="flex items-center justify-between">
@@ -216,6 +284,7 @@ export default function Encashments() {
           ))}
         </div>
       )}
+      </div>
 
       {/* Reject Dialog */}
       <Dialog open={showRejectDialog} onOpenChange={setShowRejectDialog}>
