@@ -21,6 +21,10 @@ const formSchema = insertActivitySchema.omit({ userId: true }).extend({
   title: z.string().min(1, "Title is required"),
   description: z.string().min(10, "Description must be at least 10 characters"),
   activityDate: z.string().min(1, "Activity date is required"),
+  attachmentUrl: z.string().optional().refine(
+    (url) => !url || url === "" || /^https?:\/\/.+/.test(url),
+    { message: "Please enter a valid URL starting with http:// or https://" }
+  ),
 });
 
 type FormData = z.infer<typeof formSchema>;

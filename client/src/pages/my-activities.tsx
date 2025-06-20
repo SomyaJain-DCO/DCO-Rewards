@@ -4,7 +4,7 @@ import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
+import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
 import { Textarea } from "@/components/ui/textarea";
 import { Calendar, FileText, User, Trophy, Clock, Search, X, ExternalLink, Edit } from "lucide-react";
@@ -25,7 +25,10 @@ const editFormSchema = z.object({
   title: z.string().min(1, "Title is required"),
   description: z.string().min(10, "Description must be at least 10 characters"),
   activityDate: z.string().min(1, "Activity date is required"),
-  attachmentUrl: z.string().optional(),
+  attachmentUrl: z.string().optional().refine(
+    (url) => !url || url === "" || /^https?:\/\/.+/.test(url),
+    { message: "Please enter a valid URL starting with http:// or https://" }
+  ),
 });
 
 type EditFormData = z.infer<typeof editFormSchema>;
@@ -403,6 +406,9 @@ export default function MyActivities() {
         <DialogContent className="sm:max-w-[500px]">
           <DialogHeader>
             <DialogTitle>Edit Activity</DialogTitle>
+            <DialogDescription>
+              Make changes to your activity submission. Only pending activities can be edited.
+            </DialogDescription>
           </DialogHeader>
           
           <Form {...editForm}>
