@@ -173,6 +173,7 @@ Changelog:
 - June 20, 2025. Implemented comprehensive profile change approval system appearing in pending approvals for both Senior Manager/Partner approvers and users who submitted requests, with complete backend API endpoints and frontend display integration
 - June 20, 2025. Added first-time login onboarding flow prompting new users to enter name and designation when logging in without profile information, with direct profile setup bypassing approval workflow for initial registration
 - June 20, 2025. Removed approval system for profile changes - users can now update their name, designation, and profile picture directly without requiring Senior Manager or Partner approval
+- June 20, 2025. Cleaned up database by removing somya.dco@gmail.com user account (ID: 44070421) from system
 ```
 
 ## User Preferences
