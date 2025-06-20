@@ -191,21 +191,6 @@ export default function Profile() {
                 </p>
               </div>
 
-              {/* Activity Overview */}
-              <div className="space-y-2 text-sm">
-                {Object.keys(activityBreakdown).length > 0 && (
-                  <div>
-                    <p className="font-medium text-gray-700 mb-2">Activity Overview</p>
-                    {Object.entries(activityBreakdown).map(([category, count]) => (
-                      <div key={category} className="flex justify-between">
-                        <span className="text-gray-600">{category}</span>
-                        <span className="font-medium">{count as number}</span>
-                      </div>
-                    ))}
-                  </div>
-                )}
-              </div>
-
               {/* User Details */}
               <div className="space-y-2 text-sm">
                 <div className="flex items-center justify-center space-x-2">
