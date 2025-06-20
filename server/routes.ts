@@ -22,8 +22,13 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // Auth middleware
   await setupAuth(app);
 
-  // Seed activity categories on startup
-  await storage.seedActivityCategories();
+  // Seed activity categories on startup with error handling
+  try {
+    await storage.seedActivityCategories();
+  } catch (error) {
+    console.error("Failed to seed activity categories on startup:", error);
+    // Continue without seeding - categories will be created on first use
+  }
 
   // Auth routes - allow pending users to get their info for profile completion
   app.get('/api/auth/user', allowPendingUsers, async (req: any, res: any) => {

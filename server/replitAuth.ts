@@ -57,12 +57,24 @@ function updateUserSession(
 async function upsertUser(
   claims: any,
 ) {
+  // Check if this is the first user in the system
+  const allUsers = await storage.getAllUsers();
+  const isFirstUser = allUsers.length === 0;
+  
   await storage.upsertUser({
     id: claims["sub"],
     email: claims["email"],
     firstName: claims["first_name"],
     lastName: claims["last_name"],
     profileImageUrl: claims["profile_image_url"],
+    // First user automatically becomes an approved Partner
+    ...(isFirstUser && {
+      status: "approved",
+      role: "approver",
+      designation: "Partner",
+      approvedBy: claims["sub"], // Self-approved
+      approvedAt: new Date(),
+    }),
   });
 }
 
