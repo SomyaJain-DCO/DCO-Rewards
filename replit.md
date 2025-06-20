@@ -167,6 +167,7 @@ Changelog:
 - June 20, 2025. Enhanced My Profile page with editable designation dropdown featuring 15+ CA firm roles (Junior Associate to Partner) and added Profile Type display showing Contributor/Approver status with role-based descriptions
 - June 20, 2025. Updated designation dropdown to 6 specific CA firm roles with automatic role assignment: Partner → Approver, Senior Manager/Manager/Associate/Senior Consultant/Analyst → Contributor, and fixed API request parameter order bug
 - June 20, 2025. Added comprehensive profile picture upload functionality to My Profile section with image preview, 5MB file size limit, automatic file cleanup, and secure file storage in uploads/profiles directory
+- June 20, 2025. Performed comprehensive database cleanup removing all user accounts except primary user (sethishuchi27@gmail.com), including deletion of 16 activities and 5 user accounts to maintain single-user system
 ```
 
 ## User Preferences
