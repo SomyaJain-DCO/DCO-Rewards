@@ -14,6 +14,7 @@ interface ActivityCardProps {
     approvedAt?: string;
     rejectionReason?: string;
     attachmentUrl?: string;
+    filePath?: string;
     user: {
       id: string;
       firstName?: string;
@@ -134,6 +135,14 @@ export default function ActivityCard({ activity, showApprover = false, userRole,
                 <ExternalLink className="h-4 w-4" />
               </a>
             </Button>
+          )}
+          {activity.filePath && (
+            <div className="text-xs text-gray-600 flex items-center gap-1">
+              <FileText className="h-3 w-3" />
+              <span className="truncate max-w-[120px]" title={activity.filePath}>
+                {activity.filePath}
+              </span>
+            </div>
           )}
           <div className="text-right">
             <Badge className={getStatusColor(activity.status)}>

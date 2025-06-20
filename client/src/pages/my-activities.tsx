@@ -29,6 +29,7 @@ const editFormSchema = z.object({
     (url) => !url || url === "" || /^https?:\/\/.+/.test(url),
     { message: "Please enter a valid URL starting with http:// or https://" }
   ),
+  filePath: z.string().optional(),
 });
 
 type EditFormData = z.infer<typeof editFormSchema>;
@@ -110,6 +111,7 @@ export default function MyActivities() {
       description: activity.description,
       activityDate: format(new Date(activity.activityDate), "yyyy-MM-dd"),
       attachmentUrl: activity.attachmentUrl || "",
+      filePath: activity.filePath || "",
     });
     setIsEditModalOpen(true);
   };
@@ -365,6 +367,14 @@ export default function MyActivities() {
                           Attachment
                         </a>
                       )}
+                      {activity.filePath && (
+                        <div className="text-gray-600 flex items-center gap-1">
+                          <FileText className="h-3 w-3" />
+                          <span className="truncate max-w-[150px]" title={activity.filePath}>
+                            {activity.filePath}
+                          </span>
+                        </div>
+                      )}
                     </div>
                   </div>
                   
@@ -492,6 +502,23 @@ export default function MyActivities() {
                     <FormLabel>Attachment URL (Optional)</FormLabel>
                     <FormControl>
                       <Input placeholder="https://..." {...field} />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+              
+              <FormField
+                control={editForm.control}
+                name="filePath"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Local File Path (Optional)</FormLabel>
+                    <FormControl>
+                      <Input 
+                        placeholder="C:\Documents\project-file.pdf or /home/user/documents/file.pdf"
+                        {...field} 
+                      />
                     </FormControl>
                     <FormMessage />
                   </FormItem>

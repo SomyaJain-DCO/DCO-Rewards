@@ -62,6 +62,7 @@ export const activities = pgTable("activities", {
   approvedAt: timestamp("approved_at"),
   rejectionReason: text("rejection_reason"),
   attachmentUrl: text("attachment_url"),
+  filePath: text("file_path"),
   createdAt: timestamp("created_at").defaultNow(),
   updatedAt: timestamp("updated_at").defaultNow(),
 });

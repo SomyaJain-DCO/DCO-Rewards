@@ -8,7 +8,7 @@ import { isUnauthorizedError } from "@/lib/authUtils";
 import { apiRequest } from "@/lib/queryClient";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
+import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage, FormDescription } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
@@ -25,6 +25,7 @@ const formSchema = insertActivitySchema.omit({ userId: true }).extend({
     (url) => !url || url === "" || /^https?:\/\/.+/.test(url),
     { message: "Please enter a valid URL starting with http:// or https://" }
   ),
+  filePath: z.string().optional(),
 });
 
 type FormData = z.infer<typeof formSchema>;
@@ -47,6 +48,7 @@ export default function SubmitActivity() {
       description: "",
       activityDate: "",
       attachmentUrl: "",
+      filePath: "",
     },
   });
 
@@ -279,6 +281,27 @@ export default function SubmitActivity() {
                           value={field.value || ""}
                         />
                       </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+                
+                <FormField
+                  control={form.control}
+                  name="filePath"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Local File Path (Optional)</FormLabel>
+                      <FormControl>
+                        <Input
+                          placeholder="C:\Documents\project-file.pdf or /home/user/documents/file.pdf"
+                          {...field}
+                          value={field.value || ""}
+                        />
+                      </FormControl>
+                      <FormDescription>
+                        Specify the path to a file on your local drive or shared network location
+                      </FormDescription>
                       <FormMessage />
                     </FormItem>
                   )}
