@@ -13,7 +13,8 @@ import {
   X,
   Activity,
   FileText,
-  Banknote
+  Banknote,
+  Shield
 } from "lucide-react";
 import { useState } from "react";
 
@@ -32,6 +33,7 @@ export default function Sidebar() {
         { name: "Approvals", href: "/approvals", icon: CheckSquare },
         { name: "Encashments", href: "/encashments", icon: Banknote },
         { name: "Team Directory", href: "/team", icon: Users },
+        { name: "Admin", href: "/admin", icon: Shield },
         { name: "My Profile", href: "/profile", icon: User },
       ];
     } else {

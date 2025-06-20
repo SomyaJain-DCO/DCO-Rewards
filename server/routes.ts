@@ -2,7 +2,9 @@ import type { Express, Request, Response } from "express";
 import { createServer, type Server } from "http";
 import { storage } from "./storage";
 import { setupAuth, isAuthenticated } from "./replitAuth";
-import { insertActivitySchema, approveActivitySchema, insertEncashmentRequestSchema, approveEncashmentRequestSchema } from "@shared/schema";
+import { insertActivitySchema, approveActivitySchema, insertEncashmentRequestSchema, approveEncashmentRequestSchema, users, activities, encashmentRequests } from "@shared/schema";
+import { db } from "./db";
+import { eq } from "drizzle-orm";
 
 interface AuthenticatedRequest extends Request {
   user?: {
@@ -346,6 +348,99 @@ export async function registerRoutes(app: Express): Promise<Server> {
     } catch (error) {
       console.error("Error fetching pending encashment requests:", error);
       res.status(500).json({ message: "Failed to fetch pending encashment requests" });
+    }
+  });
+
+  // Admin cleanup route - Remove sample/test users
+  app.delete('/api/admin/cleanup-samples', isAuthenticated, async (req: any, res: any) => {
+    try {
+      const userId = req.user?.claims.sub;
+      const user = await storage.getUser(userId);
+      
+      // Only allow approvers to perform cleanup
+      if (!user || user.role !== 'approver') {
+        return res.status(403).json({ message: "Access denied. Approver role required." });
+      }
+
+      // Identify and remove sample/test users
+      const sampleEmailPatterns = [
+        '@dhaddaco.com',
+        'test@',
+        'sample@',
+        'demo@',
+        'example@',
+        '.test',
+        '.sample',
+        '.demo'
+      ];
+
+      const sampleNamePatterns = [
+        'test',
+        'sample',
+        'demo',
+        'example',
+        'john',
+        'jane',
+        'admin',
+        'user',
+        'amit',
+        'kumar',
+        'vikram',
+        'gupta',
+        'sharma',
+        'singh',
+        'analyst',
+        'manager',
+        'developer'
+      ];
+
+      // Get all users to check for samples
+      const allUsers = await storage.getAllUsers();
+      const sampleUsers = allUsers.filter(user => {
+        // Check email patterns
+        const emailMatch = sampleEmailPatterns.some(pattern => 
+          user.email?.toLowerCase().includes(pattern.toLowerCase())
+        );
+        
+        // Check name patterns
+        const nameMatch = sampleNamePatterns.some(pattern => {
+          const firstName = user.firstName?.toLowerCase() || '';
+          const lastName = user.lastName?.toLowerCase() || '';
+          return firstName.includes(pattern) || lastName.includes(pattern);
+        });
+
+        return emailMatch || nameMatch;
+      });
+
+      // Remove sample users and their activities
+      let removedCount = 0;
+      for (const sampleUser of sampleUsers) {
+        // Don't remove the current admin user
+        if (sampleUser.id === userId) continue;
+        
+        try {
+          // Remove user's activities first
+          await db.delete(activities).where(eq(activities.userId, sampleUser.id));
+          
+          // Remove user's encashment requests
+          await db.delete(encashmentRequests).where(eq(encashmentRequests.userId, sampleUser.id));
+          
+          // Remove the user
+          await db.delete(users).where(eq(users.id, sampleUser.id));
+          
+          removedCount++;
+        } catch (error) {
+          console.error(`Error removing sample user ${sampleUser.id}:`, error);
+        }
+      }
+
+      res.json({ 
+        message: `Cleanup completed. Removed ${removedCount} sample users and their data.`,
+        removedUsers: sampleUsers.map(u => ({ id: u.id, email: u.email, name: `${u.firstName} ${u.lastName}` }))
+      });
+    } catch (error) {
+      console.error("Error during sample cleanup:", error);
+      res.status(500).json({ message: "Failed to perform cleanup" });
     }
   });
 

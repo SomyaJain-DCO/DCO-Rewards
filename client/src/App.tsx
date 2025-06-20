@@ -16,6 +16,7 @@ import MyActivities from "@/pages/my-activities";
 import AllActivities from "@/pages/all-activities";
 import Encashment from "@/pages/encashment";
 import Encashments from "@/pages/encashments";
+import Admin from "@/pages/admin";
 import Sidebar from "@/components/sidebar";
 import Header from "@/components/header";
 
@@ -51,6 +52,7 @@ function Router() {
                   <Route path="/all-activities" component={AllActivities} />
                   <Route path="/encashment" component={Encashment} />
                   <Route path="/encashments" component={Encashments} />
+                  <Route path="/admin" component={Admin} />
                   <Route path="/user/:userId" component={({ params }) => <UserActivities userId={params?.userId || ""} />} />
                   <Route component={NotFound} />
                 </Switch>
