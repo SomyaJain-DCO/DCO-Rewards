@@ -13,6 +13,7 @@ interface LeaderboardUser {
   lastName?: string;
   email?: string;
   designation?: string;
+  profileImageUrl?: string;
   totalPoints: number;
   totalEarnings: number;
 }
@@ -99,11 +100,19 @@ export default function Leaderboard({ data, monthlyData, yearlyData, currentUser
                     {getRankIcon(rank)}
                   </span>
                 </div>
-                <div className="w-10 h-10 bg-primary rounded-full flex items-center justify-center">
-                  <span className="text-white font-medium">
-                    {getInitials(user.firstName, user.lastName, user.email)}
-                  </span>
-                </div>
+                {user.profileImageUrl ? (
+                  <img
+                    src={user.profileImageUrl}
+                    alt={getDisplayName(user)}
+                    className="w-10 h-10 rounded-full object-cover border-2 border-gray-200"
+                  />
+                ) : (
+                  <div className="w-10 h-10 bg-primary rounded-full flex items-center justify-center">
+                    <span className="text-white font-medium">
+                      {getInitials(user.firstName, user.lastName, user.email)}
+                    </span>
+                  </div>
+                )}
                 <div>
                   <div className="flex items-center space-x-2">
                     <Link href={`/user/${user.id}`}>

@@ -101,12 +101,14 @@ export default function Profile() {
       setProfileImagePreview(null);
       // Invalidate all user-related queries to update Dashboard and other components
       queryClient.invalidateQueries({ queryKey: ["/api/auth/user"] });
+      queryClient.invalidateQueries({ queryKey: ["/api/leaderboard"] });
+      queryClient.invalidateQueries({ queryKey: ["/api/leaderboard/monthly"] });
+      queryClient.invalidateQueries({ queryKey: ["/api/leaderboard/yearly"] });
       // Force immediate refetch to update all components including Dashboard
       queryClient.refetchQueries({ queryKey: ["/api/auth/user"] });
-      // Small delay to ensure UI updates
-      setTimeout(() => {
-        queryClient.invalidateQueries({ queryKey: ["/api/auth/user"] });
-      }, 100);
+      queryClient.refetchQueries({ queryKey: ["/api/leaderboard"] });
+      queryClient.refetchQueries({ queryKey: ["/api/leaderboard/monthly"] });
+      queryClient.refetchQueries({ queryKey: ["/api/leaderboard/yearly"] });
     },
     onError: (error) => {
       if (isUnauthorizedError(error)) {
