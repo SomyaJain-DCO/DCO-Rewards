@@ -238,11 +238,10 @@ export default function AllActivities() {
                         )}
                       </div>
 
-                      <p className="text-sm font-medium text-gray-900 mt-1">
-                        {activity.title}
-                      </p>
-                      <p className="text-sm text-gray-600 mt-1 line-clamp-2">
-                        {activity.description}
+                      <p className="text-sm text-gray-900 mt-1 line-clamp-2">
+                        <span className="font-medium">{activity.title}</span>
+                        <span className="text-gray-400 mx-2">|</span>
+                        <span className="text-gray-600">{activity.description}</span>
                       </p>
                     </div>
                   </div>
