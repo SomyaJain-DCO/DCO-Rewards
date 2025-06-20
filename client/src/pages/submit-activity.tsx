@@ -54,7 +54,7 @@ export default function SubmitActivity() {
 
   const mutation = useMutation({
     mutationFn: async (data: FormData) => {
-      return await apiRequest("POST", "/api/activities", {
+      return await apiRequest("/api/activities", "POST", {
         ...data,
         activityDate: data.activityDate,
       });

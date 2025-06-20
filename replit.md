@@ -177,6 +177,7 @@ Changelog:
 - June 20, 2025. Enhanced Dashboard with personalized welcome section displaying user's name, designation, and profile picture, and updated Profile edit dialog button text from "Submit for Approval" to "Save" to reflect direct update functionality
 - June 20, 2025. Fixed profile picture synchronization between My Profile and Dashboard by implementing forced cache invalidation and refetch to ensure immediate UI updates across all components
 - June 20, 2025. Enhanced Points Table in Dashboard to display actual profile pictures instead of initials, with comprehensive cache invalidation for all leaderboard queries to ensure real-time profile picture updates across the application
+- June 20, 2025. Fixed activity submission form error by correcting parameter order in apiRequest function call - activities can now be submitted properly without fetch method errors
 ```
 
 ## User Preferences
