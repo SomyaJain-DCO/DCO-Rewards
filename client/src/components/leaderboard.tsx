@@ -3,6 +3,8 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { cn } from "@/lib/utils";
 import { Link } from "wouter";
+import { useState } from "react";
+import { ChevronDown, ChevronUp } from "lucide-react";
 
 interface LeaderboardUser {
   id: string;
@@ -22,6 +24,8 @@ interface LeaderboardProps {
 }
 
 export default function Leaderboard({ data, currentUserId, isLoading, userRole }: LeaderboardProps) {
+  const [showAllRanks, setShowAllRanks] = useState(false);
+
   const getInitials = (firstName?: string, lastName?: string, email?: string) => {
     if (!firstName && !lastName) return email?.charAt(0).toUpperCase() || "U";
     return `${firstName?.charAt(0) || ""}${lastName?.charAt(0) || ""}`.toUpperCase();
@@ -113,58 +117,137 @@ export default function Leaderboard({ data, currentUserId, isLoading, userRole }
               <p>No leaderboard data available.</p>
             </div>
           ) : (
-            data.slice(0, 10).map((user, index) => {
-              const rank = index + 1;
-              const isCurrentUser = user.id === currentUserId;
-              
-              return (
-                <div
-                  key={user.id}
-                  className={cn(
-                    "flex items-center justify-between p-4 rounded-lg",
-                    isCurrentUser
-                      ? "bg-blue-50 border-l-4 border-primary"
-                      : "bg-gray-50"
-                  )}
-                >
-                  <div className="flex items-center space-x-4">
-                    <div className={cn("w-8 h-8 rounded-full flex items-center justify-center", getRankColor(rank))}>
-                      <span className="text-white text-sm font-bold">
-                        {rank <= 3 ? getRankIcon(rank) : rank}
-                      </span>
-                    </div>
-                    <div className="w-10 h-10 bg-primary rounded-full flex items-center justify-center">
-                      <span className="text-white font-medium">
-                        {getInitials(user.firstName, user.lastName, user.email)}
-                      </span>
-                    </div>
-                    <div>
-                      <div className="flex items-center space-x-2">
-                        <Link href={`/user/${user.id}`}>
-                          <p className="font-medium text-gray-800 hover:text-blue-600 cursor-pointer transition-colors">
-                            {getDisplayName(user)}
-                          </p>
-                        </Link>
-                        {isCurrentUser && (
-                          <Badge className="bg-primary text-white">You</Badge>
-                        )}
-                      </div>
-                      <p className="text-sm text-gray-600">
-                        {user.designation || "Team Member"}
-                      </p>
-                    </div>
-                  </div>
-                  <div className="text-right">
-                    <p className="font-bold text-gray-800">{user.totalPoints} pts</p>
-                    {userRole === 'approver' && (
-                      <p className="text-sm text-secondary font-medium">
-                        ₹{user.totalEarnings.toLocaleString()}
-                      </p>
+            <>
+              {/* Top 3 Rankings */}
+              {data.slice(0, 3).map((user, index) => {
+                const rank = index + 1;
+                const isCurrentUser = user.id === currentUserId;
+                
+                return (
+                  <div
+                    key={user.id}
+                    className={cn(
+                      "flex items-center justify-between p-4 rounded-lg",
+                      isCurrentUser
+                        ? "bg-blue-50 border-l-4 border-primary"
+                        : "bg-gray-50"
                     )}
+                  >
+                    <div className="flex items-center space-x-4">
+                      <div className={cn("w-8 h-8 rounded-full flex items-center justify-center", getRankColor(rank))}>
+                        <span className="text-white text-sm font-bold">
+                          {getRankIcon(rank)}
+                        </span>
+                      </div>
+                      <div className="w-10 h-10 bg-primary rounded-full flex items-center justify-center">
+                        <span className="text-white font-medium">
+                          {getInitials(user.firstName, user.lastName, user.email)}
+                        </span>
+                      </div>
+                      <div>
+                        <div className="flex items-center space-x-2">
+                          <Link href={`/user/${user.id}`}>
+                            <p className="font-medium text-gray-800 hover:text-blue-600 cursor-pointer transition-colors">
+                              {getDisplayName(user)}
+                            </p>
+                          </Link>
+                          {isCurrentUser && (
+                            <Badge className="bg-primary text-white">You</Badge>
+                          )}
+                        </div>
+                        <p className="text-sm text-gray-600">
+                          {user.designation || "Team Member"}
+                        </p>
+                      </div>
+                    </div>
+                    <div className="text-right">
+                      <p className="font-bold text-gray-800">{user.totalPoints} pts</p>
+                      {userRole === 'approver' && (
+                        <p className="text-sm text-secondary font-medium">
+                          ₹{user.totalEarnings.toLocaleString()}
+                        </p>
+                      )}
+                    </div>
                   </div>
-                </div>
-              );
-            })
+                );
+              })}
+
+              {/* Others Section - Collapsible */}
+              {data.length > 3 && (
+                <>
+                  <div className="border-t pt-4">
+                    <button
+                      onClick={() => setShowAllRanks(!showAllRanks)}
+                      className="flex items-center justify-between w-full p-3 text-left bg-gray-100 hover:bg-gray-200 rounded-lg transition-colors"
+                    >
+                      <span className="font-medium text-gray-700">
+                        Others ({data.length - 3} more)
+                      </span>
+                      {showAllRanks ? (
+                        <ChevronUp className="h-5 w-5 text-gray-500" />
+                      ) : (
+                        <ChevronDown className="h-5 w-5 text-gray-500" />
+                      )}
+                    </button>
+                  </div>
+
+                  {showAllRanks && (
+                    <div className="space-y-2">
+                      {data.slice(3).map((user, index) => {
+                        const rank = index + 4;
+                        const isCurrentUser = user.id === currentUserId;
+                        
+                        return (
+                          <div
+                            key={user.id}
+                            className={cn(
+                              "flex items-center justify-between p-3 rounded-lg",
+                              isCurrentUser
+                                ? "bg-blue-50 border-l-4 border-primary"
+                                : "bg-gray-50"
+                            )}
+                          >
+                            <div className="flex items-center space-x-3">
+                              <div className="w-6 h-6 bg-gray-300 rounded-full flex items-center justify-center">
+                                <span className="text-white text-xs font-bold">{rank}</span>
+                              </div>
+                              <div className="w-8 h-8 bg-primary rounded-full flex items-center justify-center">
+                                <span className="text-white text-sm font-medium">
+                                  {getInitials(user.firstName, user.lastName, user.email)}
+                                </span>
+                              </div>
+                              <div>
+                                <div className="flex items-center space-x-2">
+                                  <Link href={`/user/${user.id}`}>
+                                    <p className="font-medium text-gray-800 hover:text-blue-600 cursor-pointer transition-colors text-sm">
+                                      {getDisplayName(user)}
+                                    </p>
+                                  </Link>
+                                  {isCurrentUser && (
+                                    <Badge className="bg-primary text-white text-xs">You</Badge>
+                                  )}
+                                </div>
+                                <p className="text-xs text-gray-600">
+                                  {user.designation || "Team Member"}
+                                </p>
+                              </div>
+                            </div>
+                            <div className="text-right">
+                              <p className="font-bold text-gray-800 text-sm">{user.totalPoints} pts</p>
+                              {userRole === 'approver' && (
+                                <p className="text-xs text-secondary font-medium">
+                                  ₹{user.totalEarnings.toLocaleString()}
+                                </p>
+                              )}
+                            </div>
+                          </div>
+                        );
+                      })}
+                    </div>
+                  )}
+                </>
+              )}
+            </>
           )}
         </div>
       </CardContent>

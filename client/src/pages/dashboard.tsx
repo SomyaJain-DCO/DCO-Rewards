@@ -3,6 +3,7 @@ import { useAuth } from "@/hooks/useAuth";
 import { useEffect } from "react";
 import { useToast } from "@/hooks/use-toast";
 import { isUnauthorizedError } from "@/lib/authUtils";
+import { Link } from "wouter";
 import StatsCard from "@/components/stats-card";
 import Leaderboard from "@/components/leaderboard";
 import ActivityCard from "@/components/activity-card";
@@ -120,11 +121,18 @@ export default function Dashboard() {
         userRole={userRole}
       />
 
-      {/* Recent Activities */}
+      {/* Recent Contributions */}
       <Card>
-        <CardHeader>
-          <CardTitle>Recent Team Activities</CardTitle>
-          <p className="text-sm text-gray-600">Latest approved contributions</p>
+        <CardHeader className="flex flex-row items-center justify-between">
+          <div>
+            <CardTitle>Recent Contributions</CardTitle>
+            <p className="text-sm text-gray-600">Latest approved contributions</p>
+          </div>
+          {recentActivities && recentActivities.length > 3 && (
+            <Link href="/team" className="text-sm text-blue-600 hover:text-blue-800 font-medium">
+              View All →
+            </Link>
+          )}
         </CardHeader>
         <CardContent>
           {activitiesLoading ? (
@@ -147,7 +155,7 @@ export default function Dashboard() {
             </div>
           ) : recentActivities && recentActivities.length > 0 ? (
             <div className="space-y-4">
-              {recentActivities.map((activity) => (
+              {recentActivities.slice(0, 3).map((activity) => (
                 <ActivityCard
                   key={activity.id}
                   activity={activity}

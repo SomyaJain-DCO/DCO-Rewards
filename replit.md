@@ -136,6 +136,9 @@ Changelog:
 - June 20, 2025. Enhanced activity cards to display full descriptions and activity dates when viewing user activities
 - June 20, 2025. Implemented concise activity list format for user activities page matching My Activities layout
 - June 20, 2025. Removed redundant user names from My Activities and Profile pages while keeping them for other users' activities
+- June 20, 2025. Added comprehensive search functionality to My Activities with keyword, year, and category filters
+- June 20, 2025. Enhanced Points Table with top 3 ranks prominently displayed and collapsible "Others" section
+- June 20, 2025. Replaced "Recent Team Activities" with "Recent Contributions" showing only 3 items with "View All" link
 ```
 
 ## User Preferences
