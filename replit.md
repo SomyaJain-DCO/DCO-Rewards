@@ -164,6 +164,7 @@ Changelog:
 - June 20, 2025. Updated dashboard title from "Total Points Awarded" to "Total Contributions" for better team-focused messaging
 - June 20, 2025. Enhanced all activity displays with prominent attachment links - added "View" buttons for URLs and "Copy Path" buttons for file paths across activity cards and approval cards
 - June 20, 2025. Added comprehensive admin panel with sample data cleanup functionality to remove automatically generated users like Amit Kumar and Vikram Gupta, including their activities and data
+- June 20, 2025. Enhanced My Profile page with editable designation dropdown featuring 15+ CA firm roles (Junior Associate to Partner) and added Profile Type display showing Contributor/Approver status with role-based descriptions
 ```
 
 ## User Preferences

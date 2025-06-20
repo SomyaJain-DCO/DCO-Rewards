@@ -271,13 +271,32 @@ export default function Profile() {
                 <div className="flex items-center justify-center gap-2">
                   {isEditingDesignation ? (
                     <div className="flex items-center justify-center gap-2 w-full max-w-md">
-                      <Input
+                      <Select
                         value={newDesignation}
-                        onChange={(e) => setNewDesignation(e.target.value)}
-                        placeholder="Enter your designation"
-                        className="flex-1 text-center"
+                        onValueChange={setNewDesignation}
                         disabled={updateDesignationMutation.isPending}
-                      />
+                      >
+                        <SelectTrigger className="flex-1">
+                          <SelectValue placeholder="Select your designation" />
+                        </SelectTrigger>
+                        <SelectContent>
+                          <SelectItem value="Junior Associate">Junior Associate</SelectItem>
+                          <SelectItem value="Associate">Associate</SelectItem>
+                          <SelectItem value="Senior Associate">Senior Associate</SelectItem>
+                          <SelectItem value="Assistant Manager">Assistant Manager</SelectItem>
+                          <SelectItem value="Manager">Manager</SelectItem>
+                          <SelectItem value="Senior Manager">Senior Manager</SelectItem>
+                          <SelectItem value="Partner">Partner</SelectItem>
+                          <SelectItem value="Chartered Accountant">Chartered Accountant</SelectItem>
+                          <SelectItem value="Articled Assistant">Articled Assistant</SelectItem>
+                          <SelectItem value="Tax Consultant">Tax Consultant</SelectItem>
+                          <SelectItem value="Audit Assistant">Audit Assistant</SelectItem>
+                          <SelectItem value="Compliance Officer">Compliance Officer</SelectItem>
+                          <SelectItem value="Finance Executive">Finance Executive</SelectItem>
+                          <SelectItem value="Accounts Executive">Accounts Executive</SelectItem>
+                          <SelectItem value="Administrative Assistant">Administrative Assistant</SelectItem>
+                        </SelectContent>
+                      </Select>
                       <Button
                         size="sm"
                         onClick={handleSaveDesignation}
@@ -313,11 +332,26 @@ export default function Profile() {
                 {(user as any)?.department && (
                   <p className="text-gray-600">{(user as any).department}</p>
                 )}
-                {(user as any)?.role && (
-                  <Badge variant={(user as any).role === 'approver' ? 'default' : 'secondary'}>
-                    {(user as any).role === 'approver' ? 'Approver' : 'Contributor'}
-                  </Badge>
-                )}
+                
+                {/* Profile Type Section */}
+                <div className="flex flex-col items-center gap-2 mt-2">
+                  <div className="flex items-center gap-2">
+                    <span className="text-sm text-gray-500">Profile Type:</span>
+                    {(user as any)?.role && (
+                      <Badge variant={(user as any).role === 'approver' ? 'default' : 'secondary'} className="text-sm">
+                        {(user as any).role === 'approver' ? 'Approver' : 'Contributor'}
+                      </Badge>
+                    )}
+                  </div>
+                  
+                  {/* Role-based description */}
+                  <p className="text-xs text-gray-500 text-center max-w-xs">
+                    {(user as any)?.role === 'approver' 
+                      ? 'Can review and approve team activities, access admin features, and manage encashment requests.'
+                      : 'Can submit activities for approval, view leaderboards, and request point encashments.'
+                    }
+                  </p>
+                </div>
               </div>
             </div>
           </CardContent>
