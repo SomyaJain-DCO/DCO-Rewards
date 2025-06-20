@@ -31,38 +31,38 @@ function Router() {
     );
   }
 
-  return (
-    <Switch>
-      {!isAuthenticated ? (
+  if (!isAuthenticated) {
+    return (
+      <Switch>
         <Route path="/" component={Landing} />
-      ) : (
-        <>
-          <div className="min-h-screen flex bg-gray-50">
-            <Sidebar />
-            <main className="flex-1 lg:ml-64">
-              <Header />
-              <div className="p-6 pt-20 lg:pt-6">
-                <Switch>
-                  <Route path="/" component={Dashboard} />
-                  <Route path="/submit-activity" component={SubmitActivity} />
-                  <Route path="/team" component={Team} />
-                  <Route path="/profile" component={Profile} />
-                  <Route path="/approvals" component={Approvals} />
-                  <Route path="/my-activities" component={MyActivities} />
-                  <Route path="/all-activities" component={AllActivities} />
-                  <Route path="/encashment" component={Encashment} />
-                  <Route path="/encashments" component={Encashments} />
-                  <Route path="/admin" component={Admin} />
-                  <Route path="/user/:userId" component={({ params }) => <UserActivities userId={params?.userId || ""} />} />
-                  <Route component={NotFound} />
-                </Switch>
-              </div>
-            </main>
-          </div>
-        </>
-      )}
-      <Route component={NotFound} />
-    </Switch>
+        <Route component={NotFound} />
+      </Switch>
+    );
+  }
+
+  return (
+    <div className="min-h-screen flex bg-gray-50">
+      <Sidebar />
+      <main className="flex-1 lg:ml-64">
+        <Header />
+        <div className="p-6 pt-20 lg:pt-6">
+          <Switch>
+            <Route path="/" component={Dashboard} />
+            <Route path="/submit-activity" component={SubmitActivity} />
+            <Route path="/team" component={Team} />
+            <Route path="/profile" component={Profile} />
+            <Route path="/approvals" component={Approvals} />
+            <Route path="/my-activities" component={MyActivities} />
+            <Route path="/all-activities" component={AllActivities} />
+            <Route path="/encashment" component={Encashment} />
+            <Route path="/encashments" component={Encashments} />
+            <Route path="/admin" component={Admin} />
+            <Route path="/user/:userId" component={({ params }) => <UserActivities userId={params?.userId || ""} />} />
+            <Route component={NotFound} />
+          </Switch>
+        </div>
+      </main>
+    </div>
   );
 }
 
