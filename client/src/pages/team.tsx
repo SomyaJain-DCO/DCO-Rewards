@@ -11,7 +11,7 @@ import { Users, Crown, UserCheck } from "lucide-react";
 
 export default function Team() {
   const { toast } = useToast();
-  const { isAuthenticated, isLoading } = useAuth();
+  const { user, isAuthenticated, isLoading } = useAuth();
 
   // Redirect to home if not authenticated
   useEffect(() => {
@@ -28,9 +28,28 @@ export default function Team() {
     }
   }, [isAuthenticated, isLoading, toast]);
 
+  // Check if user is approver
+  const userRole = user?.role;
+  const isApprover = userRole === "approver";
+
+  // Redirect contributors away from team page
+  useEffect(() => {
+    if (!isLoading && isAuthenticated && !isApprover) {
+      toast({
+        title: "Access Denied",
+        description: "Team Directory is available to approvers only.",
+        variant: "destructive",
+      });
+      setTimeout(() => {
+        window.location.href = "/";
+      }, 1000);
+      return;
+    }
+  }, [isAuthenticated, isLoading, isApprover, toast]);
+
   const { data: team, isLoading: teamLoading, error } = useQuery({
     queryKey: ["/api/team"],
-    enabled: isAuthenticated,
+    enabled: isAuthenticated && isApprover,
   });
 
   useEffect(() => {

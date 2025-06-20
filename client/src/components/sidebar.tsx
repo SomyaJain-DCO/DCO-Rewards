@@ -14,8 +14,11 @@ import {
 const navigation = [
   { name: "Dashboard", href: "/", icon: LayoutDashboard },
   { name: "Submit Activity", href: "/submit-activity", icon: Plus },
-  { name: "Team Directory", href: "/team", icon: Users },
   { name: "My Profile", href: "/profile", icon: User },
+];
+
+const approverOnlyNavigation = [
+  { name: "Team Directory", href: "/team", icon: Users },
 ];
 
 const approverNavigation = [
@@ -50,6 +53,30 @@ export default function Sidebar() {
         </div>
         <ul className="space-y-1 px-2">
           {navigation.map((item) => {
+            const isActive = location === item.href;
+            return (
+              <li key={item.name}>
+                <Link href={item.href}>
+                  <div
+                    className={cn(
+                      "flex items-center px-4 py-3 text-gray-700 rounded-lg hover:bg-gray-50 transition-colors cursor-pointer",
+                      isActive && "bg-blue-50 border-r-2 border-primary text-primary"
+                    )}
+                  >
+                    <item.icon 
+                      className={cn(
+                        "mr-3 h-5 w-5",
+                        isActive ? "text-primary" : "text-gray-400"
+                      )} 
+                    />
+                    {item.name}
+                  </div>
+                </Link>
+              </li>
+            );
+          })}
+          
+          {userRole === "approver" && approverOnlyNavigation.map((item) => {
             const isActive = location === item.href;
             return (
               <li key={item.name}>

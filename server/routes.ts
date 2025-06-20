@@ -157,9 +157,17 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  // Get team members
+  // Get team members (approvers only)
   app.get('/api/team', isAuthenticated, async (req: any, res: any) => {
     try {
+      const userId = req.user?.claims.sub;
+      if (!userId) return res.status(401).json({ message: "Unauthorized" });
+
+      const user = await storage.getUser(userId);
+      if (user?.role !== 'approver') {
+        return res.status(403).json({ message: "Access denied. Team Directory is available to approvers only." });
+      }
+
       const team = await storage.getAllUsers();
       res.json(team);
     } catch (error) {
