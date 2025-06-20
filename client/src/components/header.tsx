@@ -33,8 +33,8 @@ const getPageInfo = (location: string) => {
       };
     default:
       return {
-        title: "Team Rewards Dashboard",
-        subtitle: "Track and manage contribution rewards",
+        title: "DCo Rewards Dashboard",
+        subtitle: "",
       };
   }
 };
