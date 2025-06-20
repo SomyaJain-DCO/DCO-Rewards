@@ -4,7 +4,7 @@ import { setupVite, serveStatic, log } from "./vite";
 import { testDatabaseConnection, initializeDatabase } from "./db";
 
 async function startServer() {
-  console.log("Starting simplified server initialization...");
+  console.log("Starting server initialization...");
   
   const app = express();
   app.use(express.json());
@@ -45,33 +45,11 @@ async function startServer() {
   const server = createServer(app);
   console.log("HTTP server created successfully");
 
-  // Test database connection and initialize
-  testDatabaseConnection().then(async connected => {
-    if (connected) {
-      console.log("Database connection verified");
-      // Initialize database tables
-      const initialized = await initializeDatabase();
-      if (initialized) {
-        console.log("Database initialized successfully");
-        // Import and register routes only after database is ready
-        import("./routes").then(({ registerRoutes }) => {
-          registerRoutes(app).catch(err => {
-            console.error("Failed to register routes:", err);
-          });
-        });
-      } else {
-        console.log("Database initialization failed, using simplified routes");
-        registerSimplifiedRoutes(app);
-      }
-    } else {
-      console.log("Database connection failed, registering simplified routes...");
-      registerSimplifiedRoutes(app);
-    }
-  });
-
-  // Register simplified routes without database dependencies
-  console.log("Registering simplified routes without database dependencies...");
-  registerSimplifiedRoutes(app);
+  // Load application routes (they have fallback handling now)
+  console.log("Loading application routes with fallback support...");
+  const { registerRoutes } = await import("./routes");
+  await registerRoutes(app);
+  console.log("Application routes registered");
 
   // Error handling middleware
   app.use((err: any, _req: Request, res: Response, _next: NextFunction) => {
@@ -97,22 +75,7 @@ async function startServer() {
   return server;
 }
 
-function registerSimplifiedRoutes(app: express.Express) {
-  // Basic health check
-  app.get('/api/health', (req, res) => {
-    res.json({ status: 'ok', timestamp: new Date().toISOString() });
-  });
 
-  // Basic auth check (without database)
-  app.get('/api/auth/user', (req, res) => {
-    res.status(401).json({ message: "Authentication service initializing" });
-  });
-
-  // Catch-all for other API routes
-  app.use('/api/*', (req, res) => {
-    res.status(503).json({ message: "Service initializing, please try again" });
-  });
-}
 
 startServer().catch(error => {
   console.error("Failed to start server:", error);
