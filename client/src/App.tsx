@@ -48,10 +48,7 @@ function Router() {
     return <CompleteProfile />;
   }
 
-  // Check if user is pending approval
-  if (user && user.status === 'pending') {
-    return <PendingApproval />;
-  }
+  // No approval check needed - all users are automatically approved
 
   return (
     <div className="min-h-screen flex bg-gray-50">

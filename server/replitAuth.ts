@@ -67,14 +67,12 @@ async function upsertUser(
     firstName: claims["first_name"],
     lastName: claims["last_name"],
     profileImageUrl: claims["profile_image_url"],
-    // First user automatically becomes an approved Partner
-    ...(isFirstUser && {
-      status: "approved",
-      role: "approver",
-      designation: "Partner",
-      approvedBy: claims["sub"], // Self-approved
-      approvedAt: new Date(),
-    }),
+    // All users are automatically approved now - no approval workflow
+    status: "approved",
+    role: isFirstUser ? "approver" : "contributor", // First user is approver, others are contributors
+    designation: isFirstUser ? "Partner" : null, // First user gets Partner designation
+    approvedBy: claims["sub"], // Self-approved
+    approvedAt: new Date(),
   });
 }
 
