@@ -4,7 +4,7 @@ import { Trophy, TrendingUp, Users, Award } from "lucide-react";
 
 export default function Landing() {
   return (
-    <div className="min-h-screen bg-gradient-to-br from-blue-50 to-white">
+    <div className="min-h-screen bg-gradient-to-br from-slate-50 to-white">
       <div className="container mx-auto px-4 py-16">
         <div className="text-center mb-12">
           <div className="flex justify-center mb-4">

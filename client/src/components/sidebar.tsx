@@ -39,22 +39,22 @@ export default function Sidebar() {
   };
 
   return (
-    <aside className="w-64 bg-white shadow-lg fixed h-full z-10">
-      <div className="p-6 border-b border-gray-200">
+    <aside className="w-64 bg-primary shadow-lg fixed h-full z-10">
+      <div className="p-6 border-b border-primary-foreground/10">
         <div className="text-center">
           <img 
             src="/dco-logo.png" 
             alt="Dhadda & Co. Logo" 
-            className="h-16 w-auto object-contain mx-auto mb-3"
+            className="h-16 w-auto object-contain mx-auto mb-3 bg-white rounded-lg px-2 py-1"
           />
-          <h2 className="text-xl font-bold text-gray-800">Dhadda & Co.</h2>
-          <p className="text-sm text-gray-600">Chartered Accountants</p>
+          <h2 className="text-xl font-bold text-primary-foreground">Dhadda & Co.</h2>
+          <p className="text-sm text-primary-foreground/80">Chartered Accountants</p>
         </div>
       </div>
       
       <nav className="mt-6">
         <div className="px-4 mb-2">
-          <span className="text-xs font-semibold text-gray-500 uppercase tracking-wide">
+          <span className="text-xs font-semibold text-primary-foreground/60 uppercase tracking-wide">
             NAVIGATION
           </span>
         </div>
@@ -66,14 +66,14 @@ export default function Sidebar() {
                 <Link href={item.href}>
                   <div
                     className={cn(
-                      "flex items-center px-4 py-3 text-gray-700 rounded-lg hover:bg-gray-50 transition-colors cursor-pointer",
-                      isActive && "bg-blue-50 border-r-2 border-primary text-primary"
+                      "flex items-center px-4 py-3 text-primary-foreground/80 rounded-lg hover:bg-primary-foreground/10 transition-colors cursor-pointer",
+                      isActive && "bg-primary-foreground/20 border-r-2 border-primary-foreground text-primary-foreground"
                     )}
                   >
                     <item.icon 
                       className={cn(
                         "mr-3 h-5 w-5",
-                        isActive ? "text-primary" : "text-gray-400"
+                        isActive ? "text-primary-foreground" : "text-primary-foreground/60"
                       )} 
                     />
                     {item.name}
@@ -90,14 +90,14 @@ export default function Sidebar() {
                 <Link href={item.href}>
                   <div
                     className={cn(
-                      "flex items-center px-4 py-3 text-gray-700 rounded-lg hover:bg-gray-50 transition-colors cursor-pointer",
-                      isActive && "bg-blue-50 border-r-2 border-primary text-primary"
+                      "flex items-center px-4 py-3 text-primary-foreground/80 rounded-lg hover:bg-primary-foreground/10 transition-colors cursor-pointer",
+                      isActive && "bg-primary-foreground/20 border-r-2 border-primary-foreground text-primary-foreground"
                     )}
                   >
                     <item.icon 
                       className={cn(
                         "mr-3 h-5 w-5",
-                        isActive ? "text-primary" : "text-gray-400"
+                        isActive ? "text-primary-foreground" : "text-primary-foreground/60"
                       )} 
                     />
                     {item.name}
@@ -114,14 +114,14 @@ export default function Sidebar() {
                 <Link href={item.href}>
                   <div
                     className={cn(
-                      "flex items-center px-4 py-3 text-gray-700 rounded-lg hover:bg-gray-50 transition-colors cursor-pointer",
-                      isActive && "bg-blue-50 border-r-2 border-primary text-primary"
+                      "flex items-center px-4 py-3 text-primary-foreground/80 rounded-lg hover:bg-primary-foreground/10 transition-colors cursor-pointer",
+                      isActive && "bg-primary-foreground/20 border-r-2 border-primary-foreground text-primary-foreground"
                     )}
                   >
                     <item.icon 
                       className={cn(
                         "mr-3 h-5 w-5",
-                        isActive ? "text-primary" : "text-gray-400"
+                        isActive ? "text-primary-foreground" : "text-primary-foreground/60"
                       )} 
                     />
                     {item.name}
