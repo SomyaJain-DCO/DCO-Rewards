@@ -142,6 +142,7 @@ Changelog:
 - June 20, 2025. Added search functionality to Profile page activity history with keyword, year, and month filters
 - June 20, 2025. Created separate "All Activities" navigation tab showing comprehensive team activity overview in concise visual format
 - June 20, 2025. Restored My Profile page to original complete format with activity history, search functionality, and performance summary
+- June 20, 2025. Updated system to show monetary values to all contributors for their own activities on profile page only, removing approver-only restriction while keeping dashboard focused on points
 ```
 
 ## User Preferences

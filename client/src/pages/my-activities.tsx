@@ -259,6 +259,11 @@ export default function MyActivities() {
                     <div className="font-semibold text-primary">
                       {activity.category.points} pts
                     </div>
+                    <div className="text-xs text-gray-500 mt-1">
+                      {activity.status === "approved" && `₹${activity.category.monetaryValue?.toLocaleString()}`}
+                      {activity.status === "pending" && `₹${activity.category.monetaryValue?.toLocaleString()}`}
+                      {activity.status === "rejected" && "₹0"}
+                    </div>
                     {userRole === "approver" && activity.category.monetaryValue && (
                       <div className="text-sm text-gray-600">
                         ₹{activity.category.monetaryValue.toLocaleString()}

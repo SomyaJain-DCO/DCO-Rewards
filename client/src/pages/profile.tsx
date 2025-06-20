@@ -251,17 +251,15 @@ export default function Profile() {
                   </div>
                 </div>
                 
-                {userRole === 'approver' && (
-                  <div className="bg-green-50 p-4 rounded-lg">
-                    <div className="flex items-center space-x-3">
-                      <DollarSign className="text-green-600 text-xl" />
-                      <div>
-                        <p className="text-sm text-gray-600">Total Earnings</p>
-                        <p className="text-xl font-bold text-gray-800">₹{stats?.totalEarnings?.toLocaleString() || 0}</p>
-                      </div>
+                <div className="bg-green-50 p-4 rounded-lg">
+                  <div className="flex items-center space-x-3">
+                    <DollarSign className="text-green-600 text-xl" />
+                    <div>
+                      <p className="text-sm text-gray-600">Total Earnings</p>
+                      <p className="text-xl font-bold text-gray-800">₹{stats?.totalEarnings?.toLocaleString() || 0}</p>
                     </div>
                   </div>
-                )}
+                </div>
                 
                 <div className="bg-purple-50 p-4 rounded-lg">
                   <div className="flex items-center space-x-3">
@@ -377,6 +375,7 @@ export default function Profile() {
                   key={activity.id}
                   activity={activity}
                   hideUserName={true}
+                  currentUserId={(user as any)?.id}
                 />
               ))}
             </div>

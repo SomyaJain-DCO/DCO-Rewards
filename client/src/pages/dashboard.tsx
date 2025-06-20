@@ -86,7 +86,7 @@ export default function Dashboard() {
         <StatsCard
           title="My Total Points"
           value={stats?.totalPoints || 0}
-          subtitle={userRole === 'approver' ? `₹${stats?.totalEarnings?.toLocaleString() || 0}` : "Points earned"}
+          subtitle="Points earned"
           icon={Trophy}
           iconColor="text-primary"
           bgColor="bg-blue-100"
@@ -96,7 +96,7 @@ export default function Dashboard() {
         <StatsCard
           title="This Month"
           value={stats?.monthlyPoints || 0}
-          subtitle={userRole === 'approver' ? `₹${stats?.monthlyEarnings?.toLocaleString() || 0}` : "Points this month"}
+          subtitle="Points this month"
           icon={Calendar}
           iconColor="text-secondary"
           bgColor="bg-green-100"
@@ -173,6 +173,7 @@ export default function Dashboard() {
                   activity={activity}
                   showApprover={false}
                   userRole={userRole}
+                  currentUserId={(user as any)?.id}
                 />
               ))}
             </div>

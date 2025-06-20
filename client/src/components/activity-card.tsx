@@ -37,9 +37,10 @@ interface ActivityCardProps {
   showApprover?: boolean;
   userRole?: string;
   hideUserName?: boolean;
+  currentUserId?: string;
 }
 
-export default function ActivityCard({ activity, showApprover = false, userRole, hideUserName = false }: ActivityCardProps) {
+export default function ActivityCard({ activity, showApprover = false, userRole, hideUserName = false, currentUserId }: ActivityCardProps) {
   const getInitials = (firstName?: string, lastName?: string, email?: string) => {
     if (!firstName && !lastName) return email?.charAt(0).toUpperCase() || "U";
     return `${firstName?.charAt(0) || ""}${lastName?.charAt(0) || ""}`.toUpperCase();
@@ -141,10 +142,10 @@ export default function ActivityCard({ activity, showApprover = false, userRole,
               {activity.status === "pending" && `+${activity.category.points} pts`}
               {activity.status === "rejected" && "Rejected"}
             </Badge>
-            {userRole === 'approver' && (
+            {(userRole === 'approver' || activity.user.id === currentUserId) && (
               <p className="text-xs text-gray-500 mt-1">
                 {activity.status === "approved" && `₹${activity.category.monetaryValue?.toLocaleString()}`}
-                {activity.status === "pending" && "Pending"}
+                {activity.status === "pending" && `₹${activity.category.monetaryValue?.toLocaleString()}`}
                 {activity.status === "rejected" && "₹0"}
               </p>
             )}
