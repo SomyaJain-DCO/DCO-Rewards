@@ -55,32 +55,33 @@ export default function ApprovalCard({ activity, onApprove, onReject, isLoading 
             </span>
           </div>
           <div className="flex-1 min-w-0">
-            <div className="flex items-center space-x-2 text-sm">
-              <span className="font-medium text-gray-900 truncate">
+            <div className="text-sm mb-1">
+              <span className="font-medium text-gray-900">
                 {getDisplayName(activity.user)}
               </span>
-              <span className="text-gray-500">•</span>
-              <span className="text-gray-600 truncate">
+              <span className="text-gray-500 mx-2">•</span>
+              <span className="text-gray-600">
                 {activity.category.name}
               </span>
-              <span className="text-gray-500">•</span>
-              <span className="text-gray-600">
-                {activity.title} | {activity.description}
-              </span>
             </div>
-            <div className="flex items-center space-x-2 text-xs text-gray-500 mt-1">
-              <span>{activity.category.points} pts</span>
-              <span>•</span>
-              <span>₹{activity.category.monetaryValue?.toLocaleString()}</span>
-              <span>•</span>
-              <span>{format(new Date(activity.activityDate), "MMM d")}</span>
-              <span>•</span>
+            <div className="text-sm text-gray-700 mb-1">
+              <span className="font-medium">{activity.title}</span>
+              {activity.description && (
+                <>
+                  <span className="text-gray-500 mx-2">|</span>
+                  <span>{activity.description}</span>
+                </>
+              )}
+            </div>
+            <div className="flex items-center space-x-3 text-xs text-gray-500">
+              <span>{activity.category.points} points</span>
+              <span>{format(new Date(activity.activityDate), "MMM d, yyyy")}</span>
               <span>{formatDistanceToNow(new Date(activity.createdAt))} ago</span>
               {activity.attachmentUrl && (
-                <>
-                  <span>•</span>
-                  <Paperclip className="h-3 w-3" />
-                </>
+                <span className="flex items-center">
+                  <Paperclip className="h-3 w-3 mr-1" />
+                  Attachment
+                </span>
               )}
             </div>
           </div>
