@@ -134,6 +134,7 @@ Changelog:
 - June 20, 2025. Created clickable stats cards linking to detailed activity lists with filtering and concise card layout
 - June 20, 2025. Fixed header positioning to prevent sidebar from hiding dashboard title text
 - June 20, 2025. Enhanced activity cards to display full descriptions and activity dates when viewing user activities
+- June 20, 2025. Implemented concise activity list format for user activities page matching My Activities layout
 ```
 
 ## User Preferences

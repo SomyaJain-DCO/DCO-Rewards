@@ -7,7 +7,9 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Skeleton } from "@/components/ui/skeleton";
-import { ArrowLeft, Trophy, Calendar, User } from "lucide-react";
+import { ArrowLeft, Trophy, Calendar, User, FileText } from "lucide-react";
+import { Badge } from "@/components/ui/badge";
+import { format } from "date-fns";
 import ActivityCard from "@/components/activity-card";
 import { Link } from "wouter";
 
@@ -215,12 +217,72 @@ export default function UserActivities({ userId }: UserActivitiesProps) {
           ) : (
             <div className="space-y-4">
               {activitiesArray.map((activity: any) => (
-                <ActivityCard
-                  key={activity.id}
-                  activity={activity}
-                  showApprover={false}
-                  userRole={userRole}
-                />
+                <Card key={activity.id} className="hover:shadow-sm transition-shadow">
+                  <CardContent className="p-4">
+                    <div className="flex items-start justify-between">
+                      <div className="flex-1 min-w-0">
+                        <div className="flex items-center gap-3 mb-2">
+                          <h3 className="font-semibold text-gray-900 truncate">{activity.title}</h3>
+                          <Badge className={
+                            activity.status === "approved" ? "bg-secondary text-white" :
+                            activity.status === "pending" ? "bg-yellow-500 text-white" :
+                            "bg-accent text-white"
+                          }>
+                            {activity.status}
+                          </Badge>
+                        </div>
+                        
+                        <p className="text-gray-700 text-sm mb-3 line-clamp-2">
+                          {activity.description}
+                        </p>
+                        
+                        <div className="flex items-center gap-4 text-xs text-gray-500">
+                          <div className="flex items-center gap-1">
+                            <Calendar className="h-3 w-3" />
+                            {format(new Date(activity.activityDate), "MMM dd, yyyy")}
+                          </div>
+                          <div className="flex items-center gap-1">
+                            <Trophy className="h-3 w-3" />
+                            {activity.category.name}
+                          </div>
+                          {activity.attachmentUrl && (
+                            <a
+                              href={activity.attachmentUrl}
+                              target="_blank"
+                              rel="noopener noreferrer"
+                              className="text-primary hover:underline flex items-center gap-1"
+                            >
+                              <FileText className="h-3 w-3" />
+                              Attachment
+                            </a>
+                          )}
+                        </div>
+                      </div>
+                      
+                      <div className="text-right ml-4">
+                        <div className="font-semibold text-primary">
+                          {activity.category.points} pts
+                        </div>
+                        {userRole === "approver" && activity.category.monetaryValue && (
+                          <div className="text-sm text-gray-600">
+                            ₹{activity.category.monetaryValue.toLocaleString()}
+                          </div>
+                        )}
+                        <div className="text-xs text-gray-500 mt-1">
+                          {format(new Date(activity.createdAt), "MMM dd")}
+                        </div>
+                      </div>
+                    </div>
+
+                    {activity.status === "rejected" && activity.rejectionReason && (
+                      <div className="mt-3 pt-3 border-t border-red-100">
+                        <div className="text-sm text-red-600">
+                          <strong>Rejection reason:</strong> {activity.rejectionReason}
+                        </div>
+                      </div>
+                    )}
+                  </CardContent>
+                </Card>
               ))}
             </div>
           )}
