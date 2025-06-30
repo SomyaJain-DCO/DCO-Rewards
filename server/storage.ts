@@ -22,8 +22,7 @@ import {
   type ProfileChangeRequestWithDetails,
   type UserStats,
 } from "@shared/schema";
-import { db } from "./db";
-import { eq, desc, and, sql, count, gte } from "drizzle-orm";
+import { supabase } from './supabaseClient';
 
 // Interface for storage operations
 export interface IStorage {
@@ -76,63 +75,56 @@ export interface IStorage {
 export class DatabaseStorage implements IStorage {
   // User operations
   async getUser(id: string): Promise<User | undefined> {
-    const [user] = await db.select().from(users).where(eq(users.id, id));
-    return user;
+    const { data, error } = await supabase
+      .from('users')
+      .select('*')
+      .eq('id', id)
+      .single();
+    if (error) throw error;
+    return data as User | undefined;
   }
 
   async upsertUser(userData: UpsertUser): Promise<User> {
-    const [user] = await db
-      .insert(users)
-      .values(userData)
-      .onConflictDoUpdate({
-        target: users.id,
-        set: {
-          ...userData,
-          updatedAt: new Date(),
-        },
-      })
-      .returning();
-    return user;
+    // Upsert by id
+    const { data, error } = await supabase
+      .from('users')
+      .upsert([{ ...userData, updatedAt: new Date().toISOString() }], { onConflict: ['id'] })
+      .select()
+      .single();
+    if (error) throw error;
+    return data as User;
   }
 
   async updateUserDesignation(id: string, designation: string): Promise<User> {
-    const [user] = await db
-      .update(users)
-      .set({ 
-        designation,
-        updatedAt: new Date(),
-      })
-      .where(eq(users.id, id))
-      .returning();
-    
-    if (!user) {
-      throw new Error("User not found");
-    }
-    
-    return user;
+    const { data, error } = await supabase
+      .from('users')
+      .update({ designation, updatedAt: new Date().toISOString() })
+      .eq('id', id)
+      .select()
+      .single();
+    if (error || !data) throw error || new Error('User not found');
+    return data as User;
   }
 
   async updateUserDesignationAndRole(id: string, designation: string, role: string): Promise<User> {
-    const [user] = await db
-      .update(users)
-      .set({ 
-        designation,
-        role,
-        updatedAt: new Date(),
-      })
-      .where(eq(users.id, id))
-      .returning();
-    
-    if (!user) {
-      throw new Error("User not found");
-    }
-    
-    return user;
+    const { data, error } = await supabase
+      .from('users')
+      .update({ designation, role, updatedAt: new Date().toISOString() })
+      .eq('id', id)
+      .select()
+      .single();
+    if (error || !data) throw error || new Error('User not found');
+    return data as User;
   }
 
   // Activity category operations
   async getActivityCategories(): Promise<ActivityCategory[]> {
-    return await db.select().from(activityCategories).orderBy(activityCategories.id);
+    const { data, error } = await supabase
+      .from('activityCategories')
+      .select('*')
+      .order('id', { ascending: true });
+    if (error) throw error;
+    return data as ActivityCategory[];
   }
 
   async seedActivityCategories(): Promise<void> {
@@ -152,263 +144,136 @@ export class DatabaseStorage implements IStorage {
       { name: "Attending Study Circle Meetings - Subject to sharing of summary & internal notes", points: 5, monetaryValue: 500, description: "Study circle participation with notes" },
       { name: "Attending Other Conferences - Subject to sharing of summary & internal notes", points: 5, monetaryValue: 500, description: "Conference attendance with notes" },
     ];
-
-    // Check if categories already exist
-    const existingCategories = await this.getActivityCategories();
-    if (existingCategories.length === 0) {
-      await db.insert(activityCategories).values(categories);
+    const { data, error } = await supabase
+      .from('activityCategories')
+      .select('id');
+    if (error) throw error;
+    if (!data || data.length === 0) {
+      const { error: insertError } = await supabase
+        .from('activityCategories')
+        .insert(categories);
+      if (insertError) throw insertError;
     }
   }
 
   // Activity operations
   async createActivity(activity: InsertActivity): Promise<Activity> {
-    const [newActivity] = await db.insert(activities).values(activity).returning();
-    return newActivity;
+    const { data, error } = await supabase
+      .from('activities')
+      .insert([{ ...activity }])
+      .select()
+      .single();
+    if (error) throw error;
+    return data as Activity;
   }
 
   async getActivityById(id: number): Promise<Activity | undefined> {
-    const [activity] = await db.select().from(activities).where(eq(activities.id, id));
-    return activity;
+    const { data, error } = await supabase
+      .from('activities')
+      .select('*')
+      .eq('id', id)
+      .single();
+    if (error) throw error;
+    return data as Activity | undefined;
   }
 
   async updateActivity(id: number, activityData: InsertActivity): Promise<Activity> {
-    const [updatedActivity] = await db
-      .update(activities)
-      .set({
-        ...activityData,
-        updatedAt: new Date(),
-      })
-      .where(eq(activities.id, id))
-      .returning();
-    return updatedActivity;
+    const { data, error } = await supabase
+      .from('activities')
+      .update({ ...activityData, updatedAt: new Date().toISOString() })
+      .eq('id', id)
+      .select()
+      .single();
+    if (error) throw error;
+    return data as Activity;
   }
 
   async getActivitiesByUser(userId: string): Promise<ActivityWithDetails[]> {
-    return await db
-      .select({
-        id: activities.id,
-        userId: activities.userId,
-        categoryId: activities.categoryId,
-        title: activities.title,
-        description: activities.description,
-        activityDate: activities.activityDate,
-        status: activities.status,
-        approvedBy: activities.approvedBy,
-        approvedAt: activities.approvedAt,
-        rejectionReason: activities.rejectionReason,
-        attachmentUrl: activities.attachmentUrl,
-        createdAt: activities.createdAt,
-        updatedAt: activities.updatedAt,
-        user: {
-          id: users.id,
-          email: users.email,
-          firstName: users.firstName,
-          lastName: users.lastName,
-          profileImageUrl: users.profileImageUrl,
-          role: users.role,
-          designation: users.designation,
-          department: users.department,
-          createdAt: users.createdAt,
-          updatedAt: users.updatedAt,
-        },
-        category: {
-          id: activityCategories.id,
-          name: activityCategories.name,
-          points: activityCategories.points,
-          monetaryValue: activityCategories.monetaryValue,
-          description: activityCategories.description,
-        },
-        approver: {
-          id: sql`approver.id`,
-          email: sql`approver.email`,
-          firstName: sql`approver.first_name`,
-          lastName: sql`approver.last_name`,
-          profileImageUrl: sql`approver.profile_image_url`,
-          role: sql`approver.role`,
-          designation: sql`approver.designation`,
-          department: sql`approver.department`,
-          createdAt: sql`approver.created_at`,
-          updatedAt: sql`approver.updated_at`,
-        },
-      })
-      .from(activities)
-      .innerJoin(users, eq(activities.userId, users.id))
-      .innerJoin(activityCategories, eq(activities.categoryId, activityCategories.id))
-      .leftJoin(sql`users as approver`, sql`activities.approved_by = approver.id`)
-      .where(eq(activities.userId, userId))
-      .orderBy(desc(activities.createdAt)) as ActivityWithDetails[];
+    const { data, error } = await supabase
+      .from('activities')
+      .select('*')
+      .eq('userId', userId);
+    if (error) throw error;
+    return data as ActivityWithDetails[];
   }
 
   async getPendingActivities(): Promise<ActivityWithDetails[]> {
-    const results = await db
-      .select({
-        id: activities.id,
-        userId: activities.userId,
-        categoryId: activities.categoryId,
-        title: activities.title,
-        description: activities.description,
-        activityDate: activities.activityDate,
-        status: activities.status,
-        approvedBy: activities.approvedBy,
-        approvedAt: activities.approvedAt,
-        rejectionReason: activities.rejectionReason,
-        attachmentUrl: activities.attachmentUrl,
-        createdAt: activities.createdAt,
-        updatedAt: activities.updatedAt,
-        user: {
-          id: users.id,
-          email: users.email,
-          firstName: users.firstName,
-          lastName: users.lastName,
-          profileImageUrl: users.profileImageUrl,
-          role: users.role,
-          designation: users.designation,
-          department: users.department,
-          createdAt: users.createdAt,
-          updatedAt: users.updatedAt,
-        },
-        category: {
-          id: activityCategories.id,
-          name: activityCategories.name,
-          points: activityCategories.points,
-          monetaryValue: activityCategories.monetaryValue,
-          description: activityCategories.description,
-        },
-      })
-      .from(activities)
-      .innerJoin(users, eq(activities.userId, users.id))
-      .innerJoin(activityCategories, eq(activities.categoryId, activityCategories.id))
-      .where(eq(activities.status, "pending"))
-      .orderBy(desc(activities.createdAt));
-    
-    return results.map(row => ({
-      ...row,
-      approver: undefined
-    })) as ActivityWithDetails[];
+    const { data, error } = await supabase
+      .from('activities')
+      .select('*')
+      .eq('status', 'pending');
+    if (error) throw error;
+    return data as ActivityWithDetails[];
   }
 
   async approveActivity(approval: ApproveActivity, approverId: string): Promise<Activity> {
-    const [updatedActivity] = await db
-      .update(activities)
-      .set({
+    const { data, error } = await supabase
+      .from('activities')
+      .update({
         status: approval.status,
         approvedBy: approverId,
-        approvedAt: new Date(),
-        rejectionReason: approval.rejectionReason,
-        updatedAt: new Date(),
+        approvedAt: new Date().toISOString(),
+        rejectionReason: approval.rejectionReason || null,
+        updatedAt: new Date().toISOString(),
       })
-      .where(eq(activities.id, approval.id))
-      .returning();
-    return updatedActivity;
+      .eq('id', approval.activityId)
+      .select()
+      .single();
+    if (error) throw error;
+    return data as Activity;
   }
 
   // Dashboard operations
   async getUserStats(userId: string): Promise<UserStats> {
-    // Get user's approved activities
-    const approvedActivities = await db
-      .select({
-        points: activityCategories.points,
-        monetaryValue: activityCategories.monetaryValue,
-        createdAt: activities.createdAt,
-      })
-      .from(activities)
-      .innerJoin(activityCategories, eq(activities.categoryId, activityCategories.id))
-      .where(and(eq(activities.userId, userId), eq(activities.status, "approved")));
+    // Fetch all activities and encashments for the user
+    const { data: activities, error: activitiesError } = await supabase
+      .from('activities')
+      .select('*')
+      .eq('userId', userId)
+      .eq('status', 'approved');
+    if (activitiesError) throw activitiesError;
 
-    // Get pending activities
-    const pendingActivities = await db
-      .select({
-        points: activityCategories.points,
-        monetaryValue: activityCategories.monetaryValue,
-      })
-      .from(activities)
-      .innerJoin(activityCategories, eq(activities.categoryId, activityCategories.id))
-      .where(and(eq(activities.userId, userId), eq(activities.status, "pending")));
+    const { data: encashments, error: encashmentsError } = await supabase
+      .from('encashmentRequests')
+      .select('*')
+      .eq('userId', userId)
+      .eq('status', 'approved');
+    if (encashmentsError) throw encashmentsError;
 
-    // Get approved encashment requests to calculate redeemed points
-    const approvedEncashments = await db
-      .select({
-        pointsRequested: encashmentRequests.pointsRequested,
-        monetaryValue: encashmentRequests.monetaryValue,
-      })
-      .from(encashmentRequests)
-      .where(and(eq(encashmentRequests.userId, userId), eq(encashmentRequests.status, "approved")));
-
-    // Calculate totals
-    const totalPointsEarned = approvedActivities.reduce((sum, activity) => sum + activity.points, 0);
-    const totalEarnings = approvedActivities.reduce((sum, activity) => sum + (activity.monetaryValue || 0), 0);
-    
-    // Calculate redeemed points
-    const redeemedPoints = approvedEncashments.reduce((sum, encashment) => sum + encashment.pointsRequested, 0);
-    const redeemedValue = approvedEncashments.reduce((sum, encashment) => sum + encashment.monetaryValue, 0);
-    
-    // Calculate balance points
-    const balancePoints = totalPointsEarned - redeemedPoints;
-    const balanceValue = totalEarnings - redeemedValue;
-    
-    // Calculate monthly points (current month)
-    const currentMonth = new Date();
-    currentMonth.setDate(1);
-    currentMonth.setHours(0, 0, 0, 0);
-    
-    const monthlyActivities = approvedActivities.filter(
-      activity => activity.createdAt && activity.createdAt >= currentMonth
-    );
-    const monthlyPoints = monthlyActivities.reduce((sum, activity) => sum + activity.points, 0);
-    const monthlyEarnings = monthlyActivities.reduce((sum, activity) => sum + (activity.monetaryValue || 0), 0);
-
-    // Calculate pending points
-    const pendingPoints = pendingActivities.reduce((sum, activity) => sum + activity.points, 0);
-    const pendingEarnings = pendingActivities.reduce((sum, activity) => sum + (activity.monetaryValue || 0), 0);
-
-    // Get ranking (based on balance points for fair comparison)
-    const leaderboard = await this.getLeaderboard();
-    const userRanking = leaderboard.findIndex(user => user.id === userId) + 1;
-
-    // Get total members
-    const [totalMembersResult] = await db
-      .select({ count: count() })
-      .from(users);
+    const totalPoints = activities?.reduce((sum, activity) => sum + (activity.points || 0), 0) || 0;
+    const totalEarnings = activities?.reduce((sum, activity) => sum + (activity.monetaryValue || 0), 0) || 0;
+    const totalEncashed = encashments?.reduce((sum, encashment) => sum + (encashment.amount || 0), 0) || 0;
 
     return {
-      totalPoints: balancePoints, // Changed to balance points for consistency
-      totalEarnings: balanceValue, // Changed to balance value for consistency
-      totalPointsEarned,
-      totalEarningsEarned: totalEarnings,
-      redeemedPoints,
-      redeemedValue,
-      monthlyPoints,
-      monthlyEarnings,
-      pendingPoints,
-      pendingEarnings,
-      pendingActivities: pendingActivities.length,
-      ranking: userRanking || 0,
-      totalMembers: totalMembersResult?.count || 0,
+      totalPoints,
+      totalEarnings,
+      totalEncashed,
     };
   }
 
   async getLeaderboard(): Promise<Array<User & { totalPoints: number; totalEarnings: number }>> {
-    const leaderboard = await db
-      .select({
-        id: users.id,
-        email: users.email,
-        firstName: users.firstName,
-        lastName: users.lastName,
-        profileImageUrl: users.profileImageUrl,
-        role: users.role,
-        designation: users.designation,
-        department: users.department,
-        createdAt: users.createdAt,
-        updatedAt: users.updatedAt,
-        totalPoints: sql<number>`COALESCE(SUM(${activityCategories.points}), 0)`,
-        totalEarnings: sql<number>`COALESCE(SUM(${activityCategories.monetaryValue}), 0)`,
-      })
-      .from(users)
-      .leftJoin(activities, and(eq(users.id, activities.userId), eq(activities.status, "approved")))
-      .leftJoin(activityCategories, eq(activities.categoryId, activityCategories.id))
-      .groupBy(users.id)
-      .orderBy(desc(sql`COALESCE(SUM(${activityCategories.points}), 0)`));
+    // Fetch all users and their activities
+    const { data: usersData, error: usersError } = await supabase
+      .from('users')
+      .select('*');
+    if (usersError) throw usersError;
 
+    const { data: activitiesData, error: activitiesError } = await supabase
+      .from('activities')
+      .select('*')
+      .eq('status', 'approved');
+    if (activitiesError) throw activitiesError;
+
+    // Aggregate points and earnings per user
+    const leaderboard = (usersData || []).map(user => {
+      const userActivities = (activitiesData || []).filter(activity => activity.userId === user.id);
+      const totalPoints = userActivities.reduce((sum, activity) => sum + (activity.points || 0), 0);
+      const totalEarnings = userActivities.reduce((sum, activity) => sum + (activity.monetaryValue || 0), 0);
+      return { ...user, totalPoints, totalEarnings };
+    });
+
+    // Sort by totalPoints descending
+    leaderboard.sort((a, b) => b.totalPoints - a.totalPoints);
     return leaderboard;
   }
 
@@ -417,7 +282,8 @@ export class DatabaseStorage implements IStorage {
     currentMonth.setDate(1);
     currentMonth.setHours(0, 0, 0, 0);
     
-    const leaderboard = await db
+    const leaderboard = await supabase
+      .from('users')
       .select({
         id: users.id,
         email: users.email,
@@ -429,18 +295,17 @@ export class DatabaseStorage implements IStorage {
         department: users.department,
         createdAt: users.createdAt,
         updatedAt: users.updatedAt,
-        totalPoints: sql<number>`COALESCE(SUM(${activityCategories.points}), 0)`,
-        totalEarnings: sql<number>`COALESCE(SUM(${activityCategories.monetaryValue}), 0)`,
+        totalPoints: supabase.sql<number>`COALESCE(SUM(${activityCategories.points}), 0)`,
+        totalEarnings: supabase.sql<number>`COALESCE(SUM(${activityCategories.monetaryValue}), 0)`,
       })
-      .from(users)
-      .leftJoin(activities, and(
-        eq(users.id, activities.userId), 
-        eq(activities.status, "approved"),
-        gte(activities.approvedAt, currentMonth)
+      .leftJoin(activities, supabase.and(
+        supabase.eq(users.id, activities.userId), 
+        supabase.eq(activities.status, "approved"),
+        supabase.gte(activities.approvedAt, currentMonth)
       ))
-      .leftJoin(activityCategories, eq(activities.categoryId, activityCategories.id))
+      .leftJoin(activityCategories, supabase.eq(activities.categoryId, activityCategories.id))
       .groupBy(users.id)
-      .orderBy(desc(sql`COALESCE(SUM(${activityCategories.points}), 0)`));
+      .orderBy(supabase.desc(supabase.sql`COALESCE(SUM(${activityCategories.points}), 0)`));
 
     return leaderboard;
   }
@@ -450,7 +315,8 @@ export class DatabaseStorage implements IStorage {
     currentYear.setMonth(0, 1);
     currentYear.setHours(0, 0, 0, 0);
     
-    const leaderboard = await db
+    const leaderboard = await supabase
+      .from('users')
       .select({
         id: users.id,
         email: users.email,
@@ -462,24 +328,24 @@ export class DatabaseStorage implements IStorage {
         department: users.department,
         createdAt: users.createdAt,
         updatedAt: users.updatedAt,
-        totalPoints: sql<number>`COALESCE(SUM(${activityCategories.points}), 0)`,
-        totalEarnings: sql<number>`COALESCE(SUM(${activityCategories.monetaryValue}), 0)`,
+        totalPoints: supabase.sql<number>`COALESCE(SUM(${activityCategories.points}), 0)`,
+        totalEarnings: supabase.sql<number>`COALESCE(SUM(${activityCategories.monetaryValue}), 0)`,
       })
-      .from(users)
-      .leftJoin(activities, and(
-        eq(users.id, activities.userId), 
-        eq(activities.status, "approved"),
-        gte(activities.approvedAt, currentYear)
+      .leftJoin(activities, supabase.and(
+        supabase.eq(users.id, activities.userId), 
+        supabase.eq(activities.status, "approved"),
+        supabase.gte(activities.approvedAt, currentYear)
       ))
-      .leftJoin(activityCategories, eq(activities.categoryId, activityCategories.id))
+      .leftJoin(activityCategories, supabase.eq(activities.categoryId, activityCategories.id))
       .groupBy(users.id)
-      .orderBy(desc(sql`COALESCE(SUM(${activityCategories.points}), 0)`));
+      .orderBy(supabase.desc(supabase.sql`COALESCE(SUM(${activityCategories.points}), 0)`));
 
     return leaderboard;
   }
 
   async getRecentActivities(limit: number = 10): Promise<ActivityWithDetails[]> {
-    return await db
+    return await supabase
+      .from('activities')
       .select({
         id: activities.id,
         userId: activities.userId,
@@ -514,29 +380,30 @@ export class DatabaseStorage implements IStorage {
           description: activityCategories.description,
         },
         approver: {
-          id: sql`approver.id`,
-          email: sql`approver.email`,
-          firstName: sql`approver.first_name`,
-          lastName: sql`approver.last_name`,
-          profileImageUrl: sql`approver.profile_image_url`,
-          role: sql`approver.role`,
-          designation: sql`approver.designation`,
-          department: sql`approver.department`,
-          createdAt: sql`approver.created_at`,
-          updatedAt: sql`approver.updated_at`,
+          id: supabase.sql`approver.id`,
+          email: supabase.sql`approver.email`,
+          firstName: supabase.sql`approver.first_name`,
+          lastName: supabase.sql`approver.last_name`,
+          profileImageUrl: supabase.sql`approver.profile_image_url`,
+          role: supabase.sql`approver.role`,
+          designation: supabase.sql`approver.designation`,
+          department: supabase.sql`approver.department`,
+          createdAt: supabase.sql`approver.created_at`,
+          updatedAt: supabase.sql`approver.updated_at`,
         },
       })
       .from(activities)
-      .innerJoin(users, eq(activities.userId, users.id))
-      .innerJoin(activityCategories, eq(activities.categoryId, activityCategories.id))
-      .leftJoin(sql`users as approver`, sql`activities.approved_by = approver.id`)
-      .where(eq(activities.status, "approved"))
-      .orderBy(desc(activities.approvedAt))
+      .innerJoin(users, supabase.eq(activities.userId, users.id))
+      .innerJoin(activityCategories, supabase.eq(activities.categoryId, activityCategories.id))
+      .leftJoin(supabase.sql`users as approver`, supabase.sql`activities.approved_by = approver.id`)
+      .where(supabase.eq(activities.status, "approved"))
+      .orderBy(supabase.desc(activities.approvedAt))
       .limit(limit) as ActivityWithDetails[];
   }
 
   async getAllActivities(): Promise<ActivityWithDetails[]> {
-    return await db
+    return await supabase
+      .from('activities')
       .select({
         id: activities.id,
         userId: activities.userId,
@@ -571,36 +438,37 @@ export class DatabaseStorage implements IStorage {
           description: activityCategories.description,
         },
         approver: {
-          id: sql`approver.id`,
-          email: sql`approver.email`,
-          firstName: sql`approver.first_name`,
-          lastName: sql`approver.last_name`,
-          profileImageUrl: sql`approver.profile_image_url`,
-          role: sql`approver.role`,
-          designation: sql`approver.designation`,
-          department: sql`approver.department`,
-          createdAt: sql`approver.created_at`,
-          updatedAt: sql`approver.updated_at`,
+          id: supabase.sql`approver.id`,
+          email: supabase.sql`approver.email`,
+          firstName: supabase.sql`approver.first_name`,
+          lastName: supabase.sql`approver.last_name`,
+          profileImageUrl: supabase.sql`approver.profile_image_url`,
+          role: supabase.sql`approver.role`,
+          designation: supabase.sql`approver.designation`,
+          department: supabase.sql`approver.department`,
+          createdAt: supabase.sql`approver.created_at`,
+          updatedAt: supabase.sql`approver.updated_at`,
         },
       })
       .from(activities)
-      .innerJoin(users, eq(activities.userId, users.id))
-      .innerJoin(activityCategories, eq(activities.categoryId, activityCategories.id))
-      .leftJoin(sql`users as approver`, sql`activities.approved_by = approver.id`)
-      .orderBy(desc(activities.createdAt)) as ActivityWithDetails[];
+      .innerJoin(users, supabase.eq(activities.userId, users.id))
+      .innerJoin(activityCategories, supabase.eq(activities.categoryId, activityCategories.id))
+      .leftJoin(supabase.sql`users as approver`, supabase.sql`activities.approved_by = approver.id`)
+      .orderBy(supabase.desc(activities.createdAt)) as ActivityWithDetails[];
   }
 
   async getAllUsers(): Promise<User[]> {
-    return await db.select().from(users).orderBy(users.firstName, users.lastName);
+    return await supabase.select().from(users).orderBy(users.firstName, users.lastName);
   }
 
   async getUserById(id: string): Promise<User | undefined> {
-    const [user] = await db.select().from(users).where(eq(users.id, id));
+    const [user] = await supabase.select().from(users).where(supabase.eq(users.id, id));
     return user;
   }
 
   async getActivitiesByUserId(userId: string): Promise<ActivityWithDetails[]> {
-    return await db
+    return await supabase
+      .from('activities')
       .select({
         id: activities.id,
         userId: activities.userId,
@@ -636,10 +504,10 @@ export class DatabaseStorage implements IStorage {
         },
       })
       .from(activities)
-      .innerJoin(users, eq(activities.userId, users.id))
-      .innerJoin(activityCategories, eq(activities.categoryId, activityCategories.id))
-      .where(eq(activities.userId, userId))
-      .orderBy(desc(activities.createdAt)) as ActivityWithDetails[];
+      .innerJoin(users, supabase.eq(activities.userId, users.id))
+      .innerJoin(activityCategories, supabase.eq(activities.categoryId, activityCategories.id))
+      .where(supabase.eq(activities.userId, userId))
+      .orderBy(supabase.desc(activities.createdAt)) as ActivityWithDetails[];
   }
 
   async getUserStatsById(userId: string): Promise<UserStats> {
@@ -648,287 +516,94 @@ export class DatabaseStorage implements IStorage {
 
   // Encashment operations
   async createEncashmentRequest(request: InsertEncashmentRequest): Promise<EncashmentRequest> {
-    const [encashmentRequest] = await db
-      .insert(encashmentRequests)
-      .values(request)
-      .returning();
-    return encashmentRequest;
+    const { data, error } = await supabase
+      .from('encashmentRequests')
+      .insert([{ ...request }])
+      .select()
+      .single();
+    if (error) throw error;
+    return data as EncashmentRequest;
   }
 
   async getEncashmentRequestsByUser(userId: string): Promise<EncashmentRequestWithDetails[]> {
-    return await db
-      .select({
-        id: encashmentRequests.id,
-        userId: encashmentRequests.userId,
-        pointsRequested: encashmentRequests.pointsRequested,
-        monetaryValue: encashmentRequests.monetaryValue,
-        status: encashmentRequests.status,
-        approvedBy: encashmentRequests.approvedBy,
-        approvedAt: encashmentRequests.approvedAt,
-        rejectionReason: encashmentRequests.rejectionReason,
-        paymentDetails: encashmentRequests.paymentDetails,
-        createdAt: encashmentRequests.createdAt,
-        updatedAt: encashmentRequests.updatedAt,
-        user: {
-          id: users.id,
-          email: users.email,
-          firstName: users.firstName,
-          lastName: users.lastName,
-          profileImageUrl: users.profileImageUrl,
-          role: users.role,
-          designation: users.designation,
-          department: users.department,
-          createdAt: users.createdAt,
-          updatedAt: users.updatedAt,
-        },
-        approver: {
-          id: sql`approver.id`,
-          email: sql`approver.email`,
-          firstName: sql`approver.first_name`,
-          lastName: sql`approver.last_name`,
-          profileImageUrl: sql`approver.profile_image_url`,
-          role: sql`approver.role`,
-          designation: sql`approver.designation`,
-          department: sql`approver.department`,
-          createdAt: sql`approver.created_at`,
-          updatedAt: sql`approver.updated_at`,
-        },
-      })
-      .from(encashmentRequests)
-      .innerJoin(users, eq(encashmentRequests.userId, users.id))
-      .leftJoin(sql`${users} as approver`, sql`${encashmentRequests.approvedBy} = approver.id`)
-      .where(eq(encashmentRequests.userId, userId))
-      .orderBy(desc(encashmentRequests.createdAt)) as EncashmentRequestWithDetails[];
+    const { data, error } = await supabase
+      .from('encashmentRequests')
+      .select('*')
+      .eq('userId', userId);
+    if (error) throw error;
+    return data as EncashmentRequestWithDetails[];
   }
 
   async getPendingEncashmentRequests(): Promise<EncashmentRequestWithDetails[]> {
-    return await db
-      .select({
-        id: encashmentRequests.id,
-        userId: encashmentRequests.userId,
-        pointsRequested: encashmentRequests.pointsRequested,
-        monetaryValue: encashmentRequests.monetaryValue,
-        status: encashmentRequests.status,
-        approvedBy: encashmentRequests.approvedBy,
-        approvedAt: encashmentRequests.approvedAt,
-        rejectionReason: encashmentRequests.rejectionReason,
-        paymentDetails: encashmentRequests.paymentDetails,
-        createdAt: encashmentRequests.createdAt,
-        updatedAt: encashmentRequests.updatedAt,
-        user: {
-          id: users.id,
-          email: users.email,
-          firstName: users.firstName,
-          lastName: users.lastName,
-          profileImageUrl: users.profileImageUrl,
-          role: users.role,
-          designation: users.designation,
-          department: users.department,
-          createdAt: users.createdAt,
-          updatedAt: users.updatedAt,
-        },
-        approver: {
-          id: sql`approver.id`,
-          email: sql`approver.email`,
-          firstName: sql`approver.first_name`,
-          lastName: sql`approver.last_name`,
-          profileImageUrl: sql`approver.profile_image_url`,
-          role: sql`approver.role`,
-          designation: sql`approver.designation`,
-          department: sql`approver.department`,
-          createdAt: sql`approver.created_at`,
-          updatedAt: sql`approver.updated_at`,
-        },
-      })
-      .from(encashmentRequests)
-      .innerJoin(users, eq(encashmentRequests.userId, users.id))
-      .leftJoin(sql`${users} as approver`, sql`${encashmentRequests.approvedBy} = approver.id`)
-      .where(eq(encashmentRequests.status, "pending"))
-      .orderBy(desc(encashmentRequests.createdAt)) as EncashmentRequestWithDetails[];
+    const { data, error } = await supabase
+      .from('encashmentRequests')
+      .select('*')
+      .eq('status', 'pending');
+    if (error) throw error;
+    return data as EncashmentRequestWithDetails[];
   }
 
   async approveEncashmentRequest(approval: ApproveEncashmentRequest, approverId: string): Promise<EncashmentRequest> {
-    const updateData: any = {
-      status: approval.status,
-      approvedBy: approverId,
-      approvedAt: new Date(),
-      updatedAt: new Date(),
-    };
-
-    if (approval.rejectionReason) {
-      updateData.rejectionReason = approval.rejectionReason;
-    }
-
-    if (approval.paymentDetails) {
-      updateData.paymentDetails = approval.paymentDetails;
-    }
-
-    const [encashmentRequest] = await db
-      .update(encashmentRequests)
-      .set(updateData)
-      .where(eq(encashmentRequests.id, approval.id))
-      .returning();
-
-    return encashmentRequest;
+    const { data, error } = await supabase
+      .from('encashmentRequests')
+      .update({
+        status: approval.status,
+        approvedBy: approverId,
+        approvedAt: new Date().toISOString(),
+        rejectionReason: approval.rejectionReason || null,
+        updatedAt: new Date().toISOString(),
+      })
+      .eq('id', approval.encashmentRequestId)
+      .select()
+      .single();
+    if (error) throw error;
+    return data as EncashmentRequest;
   }
 
   // Profile change request operations
   async createProfileChangeRequest(request: InsertProfileChangeRequest): Promise<ProfileChangeRequest> {
-    const [profileChangeRequest] = await db
-      .insert(profileChangeRequests)
-      .values(request)
-      .returning();
-    return profileChangeRequest;
+    const { data, error } = await supabase
+      .from('profileChangeRequests')
+      .insert([{ ...request }])
+      .select()
+      .single();
+    if (error) throw error;
+    return data as ProfileChangeRequest;
   }
 
   async getProfileChangeRequestsByUser(userId: string): Promise<ProfileChangeRequestWithDetails[]> {
-    return await db
-      .select({
-        id: profileChangeRequests.id,
-        userId: profileChangeRequests.userId,
-        requestedFirstName: profileChangeRequests.requestedFirstName,
-        requestedLastName: profileChangeRequests.requestedLastName,
-        requestedDesignation: profileChangeRequests.requestedDesignation,
-        profileImageUrl: profileChangeRequests.profileImageUrl,
-        status: profileChangeRequests.status,
-        approvedBy: profileChangeRequests.approvedBy,
-        approvedAt: profileChangeRequests.approvedAt,
-        rejectionReason: profileChangeRequests.rejectionReason,
-        createdAt: profileChangeRequests.createdAt,
-        updatedAt: profileChangeRequests.updatedAt,
-        user: {
-          id: users.id,
-          email: users.email,
-          firstName: users.firstName,
-          lastName: users.lastName,
-          profileImageUrl: users.profileImageUrl,
-          role: users.role,
-          designation: users.designation,
-          department: users.department,
-          createdAt: users.createdAt,
-          updatedAt: users.updatedAt,
-        },
-        approver: {
-          id: sql`approver.id`,
-          email: sql`approver.email`,
-          firstName: sql`approver.first_name`,
-          lastName: sql`approver.last_name`,
-          profileImageUrl: sql`approver.profile_image_url`,
-          role: sql`approver.role`,
-          designation: sql`approver.designation`,
-          department: sql`approver.department`,
-          createdAt: sql`approver.created_at`,
-          updatedAt: sql`approver.updated_at`,
-        },
-      })
-      .from(profileChangeRequests)
-      .innerJoin(users, eq(profileChangeRequests.userId, users.id))
-      .leftJoin(sql`${users} as approver`, sql`${profileChangeRequests.approvedBy} = approver.id`)
-      .where(eq(profileChangeRequests.userId, userId))
-      .orderBy(desc(profileChangeRequests.createdAt)) as ProfileChangeRequestWithDetails[];
+    const { data, error } = await supabase
+      .from('profileChangeRequests')
+      .select('*')
+      .eq('userId', userId);
+    if (error) throw error;
+    return data as ProfileChangeRequestWithDetails[];
   }
 
   async getPendingProfileChangeRequests(): Promise<ProfileChangeRequestWithDetails[]> {
-    return await db
-      .select({
-        id: profileChangeRequests.id,
-        userId: profileChangeRequests.userId,
-        requestedFirstName: profileChangeRequests.requestedFirstName,
-        requestedLastName: profileChangeRequests.requestedLastName,
-        requestedDesignation: profileChangeRequests.requestedDesignation,
-        profileImageUrl: profileChangeRequests.profileImageUrl,
-        status: profileChangeRequests.status,
-        approvedBy: profileChangeRequests.approvedBy,
-        approvedAt: profileChangeRequests.approvedAt,
-        rejectionReason: profileChangeRequests.rejectionReason,
-        createdAt: profileChangeRequests.createdAt,
-        updatedAt: profileChangeRequests.updatedAt,
-        user: {
-          id: users.id,
-          email: users.email,
-          firstName: users.firstName,
-          lastName: users.lastName,
-          profileImageUrl: users.profileImageUrl,
-          role: users.role,
-          designation: users.designation,
-          department: users.department,
-          createdAt: users.createdAt,
-          updatedAt: users.updatedAt,
-        },
-        approver: {
-          id: sql`approver.id`,
-          email: sql`approver.email`,
-          firstName: sql`approver.first_name`,
-          lastName: sql`approver.last_name`,
-          profileImageUrl: sql`approver.profile_image_url`,
-          role: sql`approver.role`,
-          designation: sql`approver.designation`,
-          department: sql`approver.department`,
-          createdAt: sql`approver.created_at`,
-          updatedAt: sql`approver.updated_at`,
-        },
-      })
-      .from(profileChangeRequests)
-      .innerJoin(users, eq(profileChangeRequests.userId, users.id))
-      .leftJoin(sql`${users} as approver`, sql`${profileChangeRequests.approvedBy} = approver.id`)
-      .where(eq(profileChangeRequests.status, "pending"))
-      .orderBy(desc(profileChangeRequests.createdAt)) as ProfileChangeRequestWithDetails[];
+    const { data, error } = await supabase
+      .from('profileChangeRequests')
+      .select('*')
+      .eq('status', 'pending');
+    if (error) throw error;
+    return data as ProfileChangeRequestWithDetails[];
   }
 
   async approveProfileChangeRequest(approval: ApproveProfileChangeRequest, approverId: string): Promise<ProfileChangeRequest> {
-    const updateData: any = {
-      status: approval.status,
-      approvedBy: approverId,
-      approvedAt: new Date(),
-      updatedAt: new Date(),
-    };
-
-    if (approval.rejectionReason) {
-      updateData.rejectionReason = approval.rejectionReason;
-    }
-
-    const [profileChangeRequest] = await db
-      .update(profileChangeRequests)
-      .set(updateData)
-      .where(eq(profileChangeRequests.id, approval.id))
-      .returning();
-
-    // If approved, apply the changes to the user profile
-    if (approval.status === "approved") {
-      const request = await db
-        .select()
-        .from(profileChangeRequests)
-        .where(eq(profileChangeRequests.id, approval.id))
-        .limit(1);
-
-      if (request[0]) {
-        const userUpdateData: any = {
-          firstName: request[0].requestedFirstName,
-          lastName: request[0].requestedLastName,
-          designation: request[0].requestedDesignation,
-          updatedAt: new Date(),
-        };
-
-        // Update role based on designation
-        if (request[0].requestedDesignation === 'Partner') {
-          userUpdateData.role = 'approver';
-        } else {
-          userUpdateData.role = 'contributor';
-        }
-
-        // Update profile image if provided
-        if (request[0].profileImageUrl) {
-          userUpdateData.profileImageUrl = request[0].profileImageUrl;
-        }
-
-        await db
-          .update(users)
-          .set(userUpdateData)
-          .where(eq(users.id, request[0].userId));
-      }
-    }
-
-    return profileChangeRequest;
+    const { data, error } = await supabase
+      .from('profileChangeRequests')
+      .update({
+        status: approval.status,
+        approvedBy: approverId,
+        approvedAt: new Date().toISOString(),
+        rejectionReason: approval.rejectionReason || null,
+        updatedAt: new Date().toISOString(),
+      })
+      .eq('id', approval.profileChangeRequestId)
+      .select()
+      .single();
+    if (error) throw error;
+    return data as ProfileChangeRequest;
   }
 }
 
